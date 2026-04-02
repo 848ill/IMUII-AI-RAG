@@ -26,6 +26,7 @@ export interface ChatMessage {
   session_id: string
   role: "user" | "assistant"
   content: string
+  user_id?: string | null
   created_at: string | null
 }
 
@@ -41,6 +42,15 @@ export interface ChatFile {
   storage_url: string | null
   metadata: Record<string, any> | null
   created_at: string | null
+}
+
+export interface UserProfile {
+  user_id: string
+  display_name?: string | null
+  tone?: string | null
+  interests?: string | null
+  lang?: string | null
+  updated_at?: string | null
 }
 
 export async function getLatestLogs(): Promise<ActivityLog[]> {
@@ -82,6 +92,7 @@ export async function getRecentChatSessions(
   try {
     const client = assertSupabaseClient()
     
+    // Optimized query: only select needed fields, no count (faster)
     let query = client
       .from("chat_sessions")
       .select("id,title,user_id,created_at")
@@ -90,11 +101,11 @@ export async function getRecentChatSessions(
 
     // Filter by userId if provided (application-level filtering)
     if (userId) {
-      // Filter by user_id AND ensure it's not NULL (exclude orphaned sessions)
-      query = query.eq("user_id", userId).not("user_id", "is", null)
+      // Single efficient filter: user_id must equal userId
+      // Supabase will use index on user_id if available
+      query = query.eq("user_id", userId)
     } else {
       // If no userId provided, only return sessions with NULL user_id (legacy/anonymous)
-      // This prevents returning all sessions when userId is missing
       query = query.is("user_id", null)
     }
 
@@ -105,18 +116,8 @@ export async function getRecentChatSessions(
       return []
     }
 
-    // Filter out any sessions with NULL user_id to prevent orphaned sessions
-    // This is a safety measure in case some sessions slipped through
-    const filtered = (data || []).filter((session) => {
-      if (userId) {
-        // If filtering by userId, only return sessions that match exactly
-        return session.user_id === userId && session.user_id !== null && session.user_id !== undefined
-      }
-      // If no userId, return sessions with NULL user_id (legacy/anonymous)
-      return session.user_id === null
-    })
-
-    return filtered
+    // Return data directly - server-side filtering is sufficient
+    return data || []
   } catch (error) {
     console.error("Error in getRecentChatSessions:", error)
     return []
@@ -130,7 +131,7 @@ export async function getSessionMessages(sessionId: string): Promise<ChatMessage
     const client = assertSupabaseClient()
     const { data, error } = await client
       .from("chat_messages")
-      .select("id,session_id,role,content,created_at")
+      .select("id,session_id,role,content,user_id,created_at")
       .eq("session_id", sessionId)
       .order("created_at", { ascending: true })
 
@@ -186,10 +187,11 @@ export async function insertChatMessage(params: {
   sessionId: string
   role: "user" | "assistant"
   content: string
+  userId?: string | null
 }): Promise<ChatMessage | null> {
   try {
     const client = assertSupabaseClient()
-    const { sessionId, role, content } = params
+    const { sessionId, role, content, userId } = params
 
     const { data, error } = await client
       .from("chat_messages")
@@ -197,8 +199,9 @@ export async function insertChatMessage(params: {
         session_id: sessionId,
         role,
         content,
+        user_id: userId || null,
       })
-      .select("id,session_id,role,content,created_at")
+      .select("id,session_id,role,content,user_id,created_at")
       .single()
 
     if (error) {
@@ -209,6 +212,32 @@ export async function insertChatMessage(params: {
     return data
   } catch (error) {
     console.error("Error in insertChatMessage:", error)
+    return null
+  }
+}
+
+export async function updateChatMessage(
+  messageId: string,
+  content: string
+): Promise<ChatMessage | null> {
+  try {
+    const client = assertSupabaseClient()
+
+    const { data, error } = await client
+      .from("chat_messages")
+      .update({ content })
+      .eq("id", messageId)
+      .select("id,session_id,role,content,created_at")
+      .single()
+
+    if (error) {
+      console.error("Error updating chat message:", error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error("Error in updateChatMessage:", error)
     return null
   }
 }
@@ -352,6 +381,69 @@ export async function getMessageFiles(messageId: string): Promise<ChatFile[]> {
   } catch (error) {
     console.error("Error in getMessageFiles:", error)
     return []
+  }
+}
+
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+  try {
+    const client = assertSupabaseClient()
+    const { data, error } = await client
+      .from("profiles")
+      .select("user_id,display_name,tone,interests,lang,updated_at")
+      .eq("user_id", userId)
+      .single()
+
+    if (error) {
+      console.error("Error fetching user profile:", error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error("Error in getUserProfile:", error)
+    return null
+  }
+}
+
+export async function upsertUserProfile(params: {
+  userId: string
+  displayName?: string | null
+  tone?: string | null
+  interests?: string | null
+  lang?: string | null
+}): Promise<UserProfile | null> {
+  try {
+    const client = assertSupabaseClient()
+    const { userId, displayName, tone, interests, lang } = params
+
+    const payload: {
+      user_id: string
+      display_name?: string | null
+      tone?: string | null
+      interests?: string | null
+      lang?: string | null
+    } = { user_id: userId }
+
+    if (displayName !== undefined) payload.display_name = displayName
+    if (tone !== undefined) payload.tone = tone
+    if (interests !== undefined) payload.interests = interests
+    if (lang !== undefined) payload.lang = lang
+
+    const { data, error } = await client
+      .from("profiles")
+      .upsert(payload, { onConflict: "user_id" })
+      .select("user_id,display_name,tone,interests,lang,updated_at")
+      .single()
+
+    if (error) {
+      console.error("Error upserting user profile:", error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error("Error in upsertUserProfile:", error)
+    return null
   }
 }
 

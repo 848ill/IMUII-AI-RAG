@@ -79,66 +79,47 @@ export function SignupForm() {
   }
 
   return (
-    <div className={cn("w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-lg space-y-6")}>
-      <div className={cn("space-y-2 text-center")}>
-        <h1 className={cn("text-2xl font-semibold text-gray-900")}>Buat Akun AURA</h1>
-        <p className={cn("text-sm text-muted-foreground")}>
-          Mulai chat dengan asisten virtual UII dan simpan riwayat percakapan kamu.
-        </p>
-      </div>
-
+    <div className={cn("w-full space-y-5")}>
       <form className={cn("space-y-4")} onSubmit={handleSubmit}>
-        <div className={cn("space-y-1")}>
-          <label className={cn("text-sm font-medium text-gray-700")}>Email</label>
-          <Input
-            type="email"
-            autoComplete="email"
-            placeholder="you@uii.ac.id"
-            value={email}
-            disabled={isSubmitting}
-            onChange={(event) => setEmail(event.target.value)}
-            className={cn("border-gray-300 focus-visible:ring-black")}
-          />
-        </div>
-
-        <div className={cn("space-y-1")}>
-          <label className={cn("text-sm font-medium text-gray-700")}>Password</label>
-          <Input
-            type="password"
-            autoComplete="new-password"
-            placeholder="Minimal 8 karakter"
-            value={password}
-            disabled={isSubmitting}
-            onChange={(event) => setPassword(event.target.value)}
-            className={cn("border-gray-300 focus-visible:ring-black")}
-          />
-        </div>
-
-        <div className={cn("space-y-1")}>
-          <label className={cn("text-sm font-medium text-gray-700")}>Konfirmasi Password</label>
-          <Input
-            type="password"
-            autoComplete="new-password"
-            placeholder="Konfirmasi password"
-            value={confirmPassword}
-            disabled={isSubmitting}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className={cn("border-gray-300 focus-visible:ring-black")}
-          />
-        </div>
+        <Input
+          type="email"
+          autoComplete="email"
+          placeholder="Email"
+          value={email}
+          disabled={isSubmitting}
+          onChange={(e) => setEmail(e.target.value)}
+          className={cn("h-11 border-input bg-background focus-visible:ring-primary")}
+        />
+        <Input
+          type="password"
+          autoComplete="new-password"
+          placeholder="Password (min. 8 karakter)"
+          value={password}
+          disabled={isSubmitting}
+          onChange={(e) => setPassword(e.target.value)}
+          className={cn("h-11 border-input bg-background focus-visible:ring-primary")}
+        />
+        <Input
+          type="password"
+          autoComplete="new-password"
+          placeholder="Konfirmasi password"
+          value={confirmPassword}
+          disabled={isSubmitting}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          className={cn("h-11 border-input bg-background focus-visible:ring-primary")}
+        />
 
         {error && (
-          <p className={cn("text-sm text-red-500 bg-red-50 rounded-md px-3 py-2")}>{error}</p>
+          <p className={cn("text-sm text-red-400 bg-red-950/50 border border-red-900/50 rounded-lg px-3 py-2")}>{error}</p>
         )}
-
         {success && (
-          <p className={cn("text-sm text-emerald-600 bg-emerald-50 rounded-md px-3 py-2")}>{success}</p>
+          <p className={cn("text-sm text-emerald-400 bg-emerald-950/50 border border-emerald-900/50 rounded-lg px-3 py-2")}>{success}</p>
         )}
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className={cn("w-full bg-black text-white hover:bg-gray-800")}
+          className={cn("w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md")}
         >
           {isSubmitting ? "Memproses..." : "Daftar"}
         </Button>
@@ -146,8 +127,8 @@ export function SignupForm() {
 
       <p className={cn("text-sm text-center text-muted-foreground")}>
         Sudah punya akun?{" "}
-        <Link href="/login" className={cn("text-gray-900 underline underline-offset-4")}>
-          Masuk di sini
+        <Link href="/login" className={cn("text-primary font-medium hover:underline")}>
+          Masuk
         </Link>
       </p>
     </div>

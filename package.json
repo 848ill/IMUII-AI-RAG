@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "scrape": "python3 scripts/scrape_uii.py",
+    "scrape:test": "python3 scripts/scrape_uii.py --max-pages 5 --max-depth 1"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -14,9 +16,12 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
+    "framer-motion": "^12.34.3",
     "lucide-react": "^0.300.0",
+    "motion": "^12.34.3",
     "next": "^14.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

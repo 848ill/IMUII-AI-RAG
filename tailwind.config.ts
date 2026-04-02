@@ -10,6 +10,9 @@ const config = {
 	],
   prefix: "",
   theme: {
+    fontFamily: {
+      sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+    },
     container: {
       center: true,
       padding: "2rem",
@@ -71,11 +74,16 @@ const config = {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        aurora: {
+          from: { backgroundPosition: "50% 50%, 50% 50%" },
+          to: { backgroundPosition: "350% 50%, 350% 50%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "marquee": "marquee 30s linear infinite",
+        aurora: "aurora 25s linear infinite",
       },
     },
   },

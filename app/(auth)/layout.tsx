@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div
       className={cn(
-        "min-h-screen bg-gradient-to-b from-white via-gray-50 to-gray-100",
+        "min-h-screen bg-background",
         "flex items-center justify-center px-4 py-16"
       )}
     >

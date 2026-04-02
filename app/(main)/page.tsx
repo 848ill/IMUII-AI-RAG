@@ -1,5 +1,5 @@
-import { ProtectedChat } from "@/components/sections/ProtectedChat"
-import { Header } from "@/components/layout/Header"
+import { HomePageClient } from "@/components/sections/HomePageClient"
+import { ResizableHeader } from "@/components/layout/ResizableHeader"
 import { cn } from "@/lib/utils"
 
 export default async function HomePage() {
@@ -10,17 +10,13 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header />
+      <ResizableHeader />
       <main className={cn("min-h-screen bg-background")}>
-        <section className={cn("container py-6 md:py-8 lg:py-10")}>
-          <div className={cn("mx-auto max-w-6xl")}>
-            <ProtectedChat
-              initialSessions={sessions}
-              initialMessages={initialMessages}
-              initialSessionId={null}
-            />
-          </div>
-        </section>
+        <HomePageClient
+          initialSessions={sessions}
+          initialMessages={initialMessages}
+          initialSessionId={null}
+        />
       </main>
     </>
   )

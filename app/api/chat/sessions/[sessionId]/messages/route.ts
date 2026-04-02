@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSessionMessages, insertChatMessage, getSessionFiles } from "@/lib/supabase"
 import { validateSessionOwnership } from "@/lib/session-ownership"
+import type { ChatFile } from "@/lib/supabase"
 
 interface RouteParams {
   params: {
@@ -25,19 +26,39 @@ export async function GET(request: Request, { params }: RouteParams) {
       }
     }
 
-    const messages = await getSessionMessages(params.sessionId)
-    const files = await getSessionFiles(params.sessionId)
+    // Load messages and files in parallel for better performance
+    const [messages, files] = await Promise.all([
+      getSessionMessages(params.sessionId),
+      getSessionFiles(params.sessionId),
+    ])
     
-    // Attach files to messages based on message_id
-    const messagesWithFiles = messages.map((message) => {
-      const messageFiles = files.filter((file) => file.message_id === message.id)
-      return {
-        ...message,
-        files: messageFiles.length > 0 ? messageFiles : undefined,
+    // Create a map for O(1) lookup instead of O(n*m) nested loop
+    const filesByMessageId = new Map<string, ChatFile[]>()
+    files.forEach((file) => {
+      if (file.message_id) {
+        const existing = filesByMessageId.get(file.message_id) || []
+        existing.push(file)
+        filesByMessageId.set(file.message_id, existing)
       }
     })
     
-    return NextResponse.json({ messages: messagesWithFiles })
+    // Attach files to messages efficiently
+    const messagesWithFiles = messages.map((message) => {
+      const messageFiles = filesByMessageId.get(message.id)
+      return {
+        ...message,
+        files: messageFiles && messageFiles.length > 0 ? messageFiles : undefined,
+      }
+    })
+    
+    return NextResponse.json(
+      { messages: messagesWithFiles },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=60", // Cache for 60 seconds
+        },
+      }
+    )
   } catch (error) {
     console.error(`GET messages for session ${params.sessionId} failed:`, error)
     return NextResponse.json(
@@ -49,7 +70,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
 export async function POST(request: Request, { params }: RouteParams) {
   try {
-    const { role, content } = await request.json().catch(() => ({}))
+    const { role, content, userId } = await request.json().catch(() => ({}))
 
     if (!role || !["user", "assistant"].includes(role)) {
       return NextResponse.json(
@@ -66,6 +87,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       sessionId: params.sessionId,
       role,
       content: messageContent,
+      userId,
     })
 
     if (!message) {

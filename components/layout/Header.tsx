@@ -19,7 +19,9 @@ export function Header() {
       <div className="container flex h-14 items-center justify-between">
         <div className="mr-4 flex items-center space-x-3">
           <Link className="flex items-center space-x-2" href="/">
-            <span className="font-bold text-xl tracking-tight">AURA</span>
+            <span className="font-bold text-xl tracking-tight text-primary">
+              IMUII
+            </span>
             <span className="text-sm font-normal text-muted-foreground hidden sm:inline">UII Assistant</span>
           </Link>
         </div>
@@ -38,7 +40,7 @@ export function Header() {
                 onClick={() => signOut()}
                 variant="outline"
                 size="sm"
-                className={cn("text-sm font-medium gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300")}
+                className={cn("text-sm font-medium gap-2 border-red-900/50 text-red-400 hover:bg-red-950/50 hover:border-red-800")}
               >
                 <LogOut className="h-4 w-4" />
                 <span>Logout</span>
@@ -48,13 +50,13 @@ export function Header() {
             <>
               <Link
                 href="/login"
-                className={cn("text-sm font-medium text-foreground/70 hover:text-foreground")}
+                className={cn("text-sm font-medium text-primary hover:underline underline-offset-4")}
               >
                 Login
               </Link>
               <Button
                 asChild
-                className={cn("bg-black text-white hover:bg-gray-800 text-sm px-4 py-2")}
+                className={cn("bg-primary text-primary-foreground hover:bg-primary/90 text-sm px-4 py-2 shadow-sm")}
               >
                 <Link href="/signup">Sign Up</Link>
               </Button>

@@ -15,8 +15,19 @@ export async function GET(request: Request) {
     }
 
     // Filter by userId - even if RLS is disabled, we filter at application level
-    const sessions = await getRecentChatSessions(25, userId)
-    return NextResponse.json({ sessions })
+    // Reduced limit from 25 to 12 for better performance
+    const sessions = await getRecentChatSessions(12, userId)
+    
+    // Add cache headers and optimize response
+    return NextResponse.json(
+      { sessions },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30, stale-while-revalidate=60", // Cache for 30s, serve stale for 60s
+          "Content-Type": "application/json",
+        },
+      }
+    )
   } catch (error) {
     console.error("GET /api/chat/sessions error:", error)
     return NextResponse.json(

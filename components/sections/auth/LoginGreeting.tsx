@@ -10,7 +10,7 @@ export function LoginGreeting() {
     // Cek apakah user pernah login sebelumnya (ada session di localStorage atau cookie)
     const checkPreviousVisit = () => {
       // Cek localStorage untuk flag pernah login
-      const hasLoggedInBefore = localStorage.getItem("aura_has_logged_in")
+      const hasLoggedInBefore = localStorage.getItem("imuii_has_logged_in")
       
       // Atau cek apakah ada Supabase session di cookie
       const hasSession = document.cookie.includes("sb-")
@@ -22,9 +22,11 @@ export function LoginGreeting() {
   }, [])
 
   return (
-    <h1 className={cn("text-3xl font-semibold text-gray-900")}>
-      {hasVisitedBefore ? "Selamat datang kembali" : "Selamat Datang"}
-    </h1>
+    <p className={cn("text-white/90 text-sm md:text-base max-w-xl leading-relaxed")}>
+      {hasVisitedBefore
+        ? "Selamat datang kembali. Akses percakapan, riwayat, dan bantuan kampus dalam satu tempat."
+        : "Selamat datang. Akses percakapan, riwayat, dan bantuan kampus dalam satu tempat."}
+    </p>
   )
 }
 

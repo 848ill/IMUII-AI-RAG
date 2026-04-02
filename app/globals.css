@@ -1,28 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    /* Dark mode - hitam dengan biru & emas UII */
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 213 83% 45%; /* Biru UII - terang untuk kontras di dark */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
+    --secondary: 45 98% 54%; /* Emas accent */
+    --secondary-foreground: 222 47% 6%;
+    --muted: 222 30% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 45 98% 54%;
+    --accent-foreground: 222 47% 6%;
+    --destructive: 0 72% 54%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 213 83% 45%;
     --radius: 0.5rem;
   }
 }
@@ -34,5 +37,98 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Aurora-style animated background (UII palette: biru + emas) - seperti Aceternity */
+@keyframes aurora {
+  from { background-position: 50% 50%, 50% 50%; }
+  to { background-position: 350% 50%, 350% 50%; }
+}
+
+.aurora-bg {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(253, 185, 19, 0.5), transparent 50%),
+    repeating-linear-gradient(
+      100deg,
+      rgba(11, 59, 117, 0.95) 0%,
+      rgba(11, 59, 117, 0.85) 12%,
+      rgba(253, 185, 19, 0.35) 25%,
+      rgba(11, 59, 117, 0.9) 38%,
+      rgba(11, 59, 117, 0.95) 50%,
+      rgba(253, 185, 19, 0.3) 62%,
+      rgba(11, 59, 117, 0.9) 75%,
+      rgba(11, 59, 117, 0.95) 100%
+    ),
+    linear-gradient(180deg, hsl(213, 83%, 24%) 0%, hsl(213, 83%, 16%) 100%);
+  background-size: 100% 100%, 300% 200%, 100% 100%;
+  background-position: 50% 50%, 50% 50%, 50% 50%;
+  animation: aurora 25s linear infinite;
+}
+
+.aurora-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 100% 60% at 50% 20%, rgba(255,255,255,0.05), transparent 50%);
+  pointer-events: none;
+}
+
+/* Base gradient untuk landing dark mode - hitam dengan biru & emas UII */
+.landing-light-rays {
+  background:
+    radial-gradient(ellipse 140% 80% at 50% -20%, rgba(11, 59, 117, 0.35), transparent 55%),
+    radial-gradient(ellipse 100% 60% at 85% -10%, rgba(11, 59, 117, 0.2), transparent 50%),
+    radial-gradient(ellipse 100% 60% at 15% -10%, rgba(11, 59, 117, 0.2), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% 30%, rgba(253, 185, 19, 0.08), transparent 55%),
+    linear-gradient(180deg, hsl(222, 47%, 6%) 0%, hsl(222, 47%, 4%) 100%);
+  min-height: 100vh;
+}
+
+/* Force LTR for edit message textarea - Maximum specificity with universal selector */
+.edit-textarea,
+.edit-mode-container,
+.edit-mode-container textarea,
+.edit-mode-wrapper,
+.edit-mode-wrapper textarea,
+textarea[dir="ltr"],
+div[dir="ltr"] textarea,
+.group textarea[dir="ltr"],
+.items-end textarea[dir="ltr"],
+.max-w-\[72\%\] textarea[dir="ltr"] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: embed !important;
+  writing-mode: horizontal-tb !important;
+  transform: none !important;
+}
+
+/* Override ANY RTL styling for edit mode containers and all children */
+.edit-mode-container,
+.edit-mode-container *,
+.edit-mode-wrapper,
+.edit-mode-wrapper * {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Ensure parent containers don't affect edit mode - override items-end */
+.group .edit-mode-container,
+.items-end .edit-mode-container,
+.items-end .edit-mode-wrapper {
+  direction: ltr !important;
+  text-align: left !important;
+  align-items: flex-start !important;
+}
+
+/* Force LTR for textarea specifically in user message bubbles */
+.group.items-end .edit-textarea,
+.group.items-end textarea[dir="ltr"] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: embed !important;
+  writing-mode: horizontal-tb !important;
+  transform: none !important;
 }
 
