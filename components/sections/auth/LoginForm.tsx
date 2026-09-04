@@ -82,15 +82,21 @@ export function LoginForm() {
     const trimmedEmail = email.trim()
     const trimmedPassword = password.trim()
     if (!trimmedEmail || !trimmedPassword) {
-      setError("Email dan kata sandi wajib diisi.")
+      setError("ID / Email dan kata sandi wajib diisi.")
       return
+    }
+
+    // Auto-map username to registered auth email
+    let resolvedEmail = trimmedEmail
+    if (resolvedEmail.toLowerCase() === "hambaallah" || !resolvedEmail.includes("@")) {
+      resolvedEmail = "hambaallah@uii.ac.id"
     }
 
     setIsSubmitting(true)
     try {
       const supabase = getSupabaseBrowserClient()
       const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
+        email: resolvedEmail,
         password: trimmedPassword,
       })
 
@@ -98,7 +104,9 @@ export function LoginForm() {
         if (authError.message.includes("fetch") || authError.message.includes("521")) {
           setError("Koneksi database terputus (Supabase web server is down / coming up). Gunakan Mode Demo untuk presentasi.")
         } else if (authError.message.includes("Invalid login credentials")) {
-          setError("Email atau kata sandi salah. Silakan periksa kembali.")
+          setError("ID / Email atau kata sandi salah. Silakan periksa kembali.")
+        } else if (authError.message.includes("Email not confirmed")) {
+          setError("Akun belum dikonfirmasi di Supabase. Silakan klik Confirm di menu Authentication -> Users.")
         } else {
           setError(authError.message)
         }
@@ -229,12 +237,12 @@ export function LoginForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-mono uppercase tracking-wider text-white/60">
-              Alamat Email
+              ID Pengguna / Email
             </label>
             <input
-              type="email"
-              autoComplete="email"
-              placeholder="nama@uii.ac.id"
+              type="text"
+              autoComplete="username"
+              placeholder="hambaAllah atau email@uii.ac.id"
               value={email}
               disabled={isSubmitting}
               onChange={(e) => setEmail(e.target.value)}
