@@ -10,11 +10,11 @@ export function SceneCanvasImpl() {
     const container = containerRef.current
     if (!container || typeof window === "undefined") return
 
-    // Scene setup
+    // 1. Scene setup with subtle depth fog
     const scene = new THREE.Scene()
     scene.fog = new THREE.FogExp2(0x070709, 0.0018)
 
-    // Camera setup
+    // 2. Camera setup
     const camera = new THREE.PerspectiveCamera(
       60,
       window.innerWidth / window.innerHeight,
@@ -23,19 +23,21 @@ export function SceneCanvasImpl() {
     )
     camera.position.z = 85
 
-    // Renderer setup
+    // 3. Ultra-efficient WebGL Renderer
+    // Pixel ratio capped at 1.5 (halves fragment shader overhead on Retina 3K/4K displays)
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
-      powerPreference: "high-performance",
+      antialias: false,
+      powerPreference: "default",
+      precision: "mediump",
     })
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setClearColor(0x070709, 1)
     container.appendChild(renderer.domElement)
 
-    // 1. Particle Constellation
-    const particleCount = 1800
+    // 4. Particle Constellation (Optimized to 1000 points with slightly larger sprite)
+    const particleCount = 1000
     const geometry = new THREE.BufferGeometry()
     const positions = new Float32Array(particleCount * 3)
     const colors = new Float32Array(particleCount * 3)
@@ -66,7 +68,7 @@ export function SceneCanvasImpl() {
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3))
 
-    // Canvas particle circular sprite texture
+    // Pre-rendered radial texture for smooth glowing dots
     const canvas = document.createElement("canvas")
     canvas.width = 32
     canvas.height = 32
@@ -83,7 +85,7 @@ export function SceneCanvasImpl() {
     const texture = new THREE.CanvasTexture(canvas)
 
     const material = new THREE.PointsMaterial({
-      size: 1.8,
+      size: 2.1,
       vertexColors: true,
       map: texture,
       transparent: true,
@@ -95,8 +97,8 @@ export function SceneCanvasImpl() {
     const particles = new THREE.Points(geometry, material)
     scene.add(particles)
 
-    // 2. Central Core Wireframe
-    const coreGeometry = new THREE.IcosahedronGeometry(28, 2)
+    // 5. Central Wireframe Geometry
+    const coreGeometry = new THREE.IcosahedronGeometry(28, 1)
     const coreMaterial = new THREE.MeshBasicMaterial({
       color: 0x00f5a0,
       wireframe: true,
@@ -116,7 +118,7 @@ export function SceneCanvasImpl() {
     const outerMesh = new THREE.Mesh(outerGeometry, outerMaterial)
     scene.add(outerMesh)
 
-    // Interactive mouse tracking
+    // 6. Smooth interactive mouse tracking
     let mouseX = 0
     let mouseY = 0
     let targetX = 0
@@ -125,8 +127,8 @@ export function SceneCanvasImpl() {
     const handleMouseMove = (event: MouseEvent) => {
       const halfX = window.innerWidth / 2
       const halfY = window.innerHeight / 2
-      mouseX = (event.clientX - halfX) * 0.00045
-      mouseY = (event.clientY - halfY) * 0.00045
+      mouseX = (event.clientX - halfX) * 0.0004
+      mouseY = (event.clientY - halfY) * 0.0004
     }
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true })
@@ -135,16 +137,39 @@ export function SceneCanvasImpl() {
       camera.aspect = window.innerWidth / window.innerHeight
       camera.updateProjectionMatrix()
       renderer.setSize(window.innerWidth, window.innerHeight)
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
     }
 
-    window.addEventListener("resize", handleResize)
+    window.addEventListener("resize", handleResize, { passive: true })
 
+    // 7. Animation Loop with 60FPS Cap and Tab Inactivity Pause
     let animationFrameId: number
+    let isVisible = true
+    let lastTime = performance.now()
+    const fpsInterval = 1000 / 60 // Cap to 60fps to avoid 120Hz/144Hz screen battery drain
     const clock = new THREE.Clock()
 
-    const animate = () => {
+    const handleVisibilityChange = () => {
+      isVisible = document.visibilityState === "visible"
+      if (isVisible) {
+        lastTime = performance.now()
+        animationFrameId = requestAnimationFrame(animate)
+      } else {
+        cancelAnimationFrame(animationFrameId)
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+
+    const animate = (currentTime: number) => {
+      if (!isVisible) return
+
       animationFrameId = requestAnimationFrame(animate)
+
+      const delta = currentTime - lastTime
+      if (delta < fpsInterval) return
+      lastTime = currentTime - (delta % fpsInterval)
+
       const elapsedTime = clock.getElapsedTime()
 
       targetX += (mouseX - targetX) * 0.04
@@ -162,11 +187,12 @@ export function SceneCanvasImpl() {
       renderer.render(scene, camera)
     }
 
-    animate()
+    animationFrameId = requestAnimationFrame(animate)
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove)
       window.removeEventListener("resize", handleResize)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
       cancelAnimationFrame(animationFrameId)
 
       geometry.dispose()
