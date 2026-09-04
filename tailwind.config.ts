@@ -11,7 +11,8 @@ const config = {
   prefix: "",
   theme: {
     fontFamily: {
-      sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+      sans: ["var(--font-plus-jakarta)", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+      mono: ["JetBrains Mono", "Fira Code", "monospace"],
     },
     container: {
       center: true,

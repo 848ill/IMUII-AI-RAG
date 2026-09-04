@@ -235,11 +235,16 @@ export const NavbarLogo = ({ href = "/" }: { href?: string }) => {
   return (
     <a
       href={href}
-      className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black dark:text-white"
+      className="relative z-20 mr-4 flex items-center space-x-2.5 px-2 py-1 text-sm font-normal text-white"
     >
-      <span className="font-bold text-xl tracking-tight text-primary">IMUII</span>
-      <span className="hidden text-sm font-normal text-muted-foreground sm:inline">
-        UII Assistant
+      <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-[#00F5A0] to-[#00D2FF] p-[1px] flex items-center justify-center">
+        <div className="h-full w-full bg-[#070709] rounded-[7px] flex items-center justify-center font-bold text-white text-xs">
+          AU
+        </div>
+      </div>
+      <span className="font-bold text-base tracking-tight text-white">AURA UII</span>
+      <span className="hidden text-xs font-mono text-white/40 sm:inline px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08]">
+        RAG v2.1
       </span>
     </a>
   );
@@ -263,15 +268,15 @@ export const NavbarButton = ({
   | React.ComponentPropsWithoutRef<"button">
 )) => {
   const baseStyles =
-    "px-4 py-2 rounded-md text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
+    "px-4 py-2 rounded-xl text-xs font-bold font-mono uppercase tracking-wider relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center";
 
   const variantStyles = {
     primary:
-      "bg-white text-black shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
-    secondary: "bg-transparent shadow-none dark:text-white",
-    dark: "bg-black text-white shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]",
+      "bg-[#00F5A0] text-black shadow-[0_0_20px_rgba(0,245,160,0.3)] hover:shadow-[0_0_25px_rgba(0,245,160,0.5)]",
+    secondary: "bg-white/[0.05] border border-white/[0.1] text-white hover:bg-white/[0.1]",
+    dark: "bg-black text-white border border-white/[0.1]",
     gradient:
-      "bg-gradient-to-b from-blue-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]",
+      "bg-[#00F5A0] text-black shadow-[0_0_20px_rgba(0,245,160,0.3)] hover:bg-[#00F5A0]/90",
   };
 
   return (

@@ -85,7 +85,7 @@ export function useN8nTrigger() {
       const finalResult = { 
           success: true, 
           data: { 
-              text: extractedText 
+              text: extractedText
           } 
       };
       

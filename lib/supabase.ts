@@ -405,6 +405,28 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
   }
 }
 
+export async function deleteMessagesAfter(
+  sessionId: string,
+  afterCreatedAt: string
+): Promise<boolean> {
+  try {
+    const client = assertSupabaseClient()
+    const { error } = await client
+      .from("chat_messages")
+      .delete()
+      .eq("session_id", sessionId)
+      .gt("created_at", afterCreatedAt)
+    if (error) {
+      console.error("Error deleting messages after:", error)
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error("Error in deleteMessagesAfter:", error)
+    return false
+  }
+}
+
 export async function upsertUserProfile(params: {
   userId: string
   displayName?: string | null

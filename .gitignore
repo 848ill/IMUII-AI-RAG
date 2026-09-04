@@ -46,9 +46,13 @@ next-env.d.ts
 *.md
 !README.md
 
-# Data hasil scraping
-/data/
-
 # n8n workflows (contains credentials)
 n8nessentials/
 n8n-backend/
+
+# Data hasil scraping
+/data/
+
+# Antigravity agent plugins
+.agents/
+

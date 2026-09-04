@@ -1,11 +1,31 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useAuth } from "@/hooks/useAuth"
-import { ProtectedChat } from "@/components/sections/ProtectedChat"
-import { LandingSection } from "@/components/sections/LandingSection"
-import { cn } from "@/lib/utils"
+import { LandingSection } from "@/components/sections/LandingSection-redesign"
+import { ResizableHeader } from "@/components/layout/ResizableHeader"
 import type { ChatSession, ChatMessage } from "@/lib/supabase"
 import { Loader2 } from "lucide-react"
+
+const ProtectedChat = dynamic(
+  () => import("@/components/sections/ProtectedChat").then((mod) => mod.ProtectedChat),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-screen w-full items-center justify-center bg-[#070709] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+          </div>
+          <p className="font-mono text-xs uppercase tracking-widest text-neutral-400">
+            Menyiapkan Workspace AURA UII...
+          </p>
+        </div>
+      </div>
+    ),
+  }
+)
+
 
 interface HomePageClientProps {
   initialSessions: ChatSession[]
@@ -22,10 +42,14 @@ export function HomePageClient({
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#070709] text-white">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Memuat...</p>
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+          </div>
+          <p className="font-mono text-xs uppercase tracking-widest text-neutral-400">
+            Menginisialisasi AURA UII...
+          </p>
         </div>
       </div>
     )
@@ -33,21 +57,21 @@ export function HomePageClient({
 
   if (user) {
     return (
-      <section className={cn("container py-6 md:py-8 lg:py-10")}>
-        <div className={cn("mx-auto max-w-6xl")}>
-          <ProtectedChat
-            initialSessions={initialSessions}
-            initialMessages={initialMessages}
-            initialSessionId={initialSessionId}
-          />
-        </div>
-      </section>
+      <div className="h-screen w-full overflow-hidden bg-[#070709] text-white">
+        <ProtectedChat
+          initialSessions={initialSessions}
+          initialMessages={initialMessages}
+          initialSessionId={initialSessionId}
+        />
+      </div>
     )
   }
 
   return (
-    <section className={cn("relative min-h-screen bg-background")}>
+    <div className="relative min-h-screen bg-[#070709] text-white">
+      <ResizableHeader />
       <LandingSection />
-    </section>
+    </div>
   )
 }
+

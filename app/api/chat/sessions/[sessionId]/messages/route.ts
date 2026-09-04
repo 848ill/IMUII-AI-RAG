@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getSessionMessages, insertChatMessage, getSessionFiles } from "@/lib/supabase"
+import { getSessionMessages, insertChatMessage, getSessionFiles, deleteMessagesAfter } from "@/lib/supabase"
 import { validateSessionOwnership } from "@/lib/session-ownership"
 import type { ChatFile } from "@/lib/supabase"
 
@@ -65,6 +65,36 @@ export async function GET(request: Request, { params }: RouteParams) {
       { error: "Failed to load messages" },
       { status: 500 }
     )
+  }
+}
+
+export async function DELETE(request: Request, { params }: RouteParams) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId")
+    const afterCreatedAt = searchParams.get("afterCreatedAt")
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+    }
+    if (!afterCreatedAt) {
+      return NextResponse.json({ error: "afterCreatedAt is required" }, { status: 400 })
+    }
+
+    const isOwner = await validateSessionOwnership(params.sessionId, userId)
+    if (!isOwner) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 })
+    }
+
+    const success = await deleteMessagesAfter(params.sessionId, afterCreatedAt)
+    if (!success) {
+      return NextResponse.json({ error: "Failed to delete messages" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 })
+  } catch (error) {
+    console.error(`DELETE messages after for session ${params.sessionId} failed:`, error)
+    return NextResponse.json({ error: "Failed to delete messages" }, { status: 500 })
   }
 }
 
