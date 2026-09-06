@@ -47,8 +47,10 @@ next-env.d.ts
 !README.md
 !PRD.md
 !TODO.md
-!PAPER_SCOPUS.md
-!paper/
+
+# Academic paper drafts (private)
+paper/
+PAPER_SCOPUS.md
 
 # n8n workflows (contains credentials)
 n8nessentials/
