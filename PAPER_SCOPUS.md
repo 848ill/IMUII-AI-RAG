@@ -1,401 +1,406 @@
-# AURA: Autonomous Two-Stage Retrieval-Augmented Generation and Multimodal Vision for Complex University Regulatory Intelligence
+# AURA: Arsitektur Retrieval-Augmented Generation Dua-Tahap dan Visi Multimodal Otonom untuk Navigasi Regulasi Kompleks Perguruan Tinggi
 
-**Billy Hanif**$^1$, **Co-Author / Thesis Advisor**$^1$  
-$^1$Department of Informatics, Faculty of Industrial Technology, Universitas Islam Indonesia, Yogyakarta 55584, Indonesia  
-*Corresponding Author:* `billy.hanif@students.uii.ac.id`  
-
----
-
-### Abstract
-Navigating decentralized, high-volume institutional regulations across universities presents substantial operational friction for students, administrative advisors, and academic evaluators. Conventional keyword-based search mechanisms fail to resolve dense semantic polysemy and hierarchical academic rules, while general-purpose Large Language Models (LLMs) without domain-constrained grounding remain critically prone to hallucinations—fabricating statutory articles, degree requirements, and financial deadlines. Furthermore, real-world student advisory workflows are increasingly multimodal, requiring interpretation of physical artifacts such as Student Identification Cards (KTM), Study Plan Cards (KRS), and institutional payment vouchers. In this paper, we propose **AURA** (*Autonomous Universal Retrieval Architecture*), an enterprise-grade, dual-channel (Web and Telegram) conversational intelligence system designed for institutional regulatory navigation. AURA incorporates a two-stage neural retrieval pipeline combining high-dimensional dense vector embeddings ($\text{Cohere Multilingual v3.0}$) with cross-encoder neural reranking ($\text{Cohere Rerank v3.0}$), reducing retrieval noise across university regulatory corpuses. To address unstructured visual inquiries, we introduce a multimodal document parsing node powered by zero-shot visual instruction tuning ($\text{GPT-4o Vision}$) that automatically extracts structured student metadata and academic credits directly from photographic artifacts. Additionally, an autonomous agentic routing layer triggers a live web retrieval fallback ($\text{SearchApi}$) when incoming queries exhibit high temporal sensitivity, completely mitigating obsolescence in dynamic university admissions and calendar notices. Evaluated across a rigorously curated benchmark of 50 complex institutional scenarios across five distinct clusters, AURA achieves **$94.2\%$ Context Relevance**, **$100.0\%$ Groundedness** (zero-hallucination compliance), and **$96.8\%$ Answer Relevance**, outperforming single-stage dense baselines by $+18.4\%$ in factual precision while maintaining an average end-to-end latency of $3.82$ seconds.
-
-**Keywords:** Retrieval-Augmented Generation (RAG), Cross-Encoder Reranking, Multimodal Document AI, Hallucination Mitigation, Academic Advising Systems, Institutional NLP.
+**Muhammad Nabil Hanif**$^1$, **Dosen Pembimbing**$^1$  
+$^1$Jurusan Teknik Informatika, Fakultas Teknologi Industri, Universitas Islam Indonesia, Yogyakarta 55584, Indonesia  
+*Korespondensi Penulis:* `nabil.hanif@students.uii.ac.id`  
 
 ---
 
-## I. INTRODUCTION
+### Abstrak
+Menavigasi regulasi institusional yang tersebar dan masif di lingkungan perguruan tinggi menimbulkan beban operasional yang signifikan bagi mahasiswa, dosen pembimbing, maupun divisi administrasi akademik. Pendekatan pencarian konvensional berbasis kata kunci (*keyword matching*) terbukti gagal menangani polisemi semantik dan relasi hierarkis peraturan kampus, sementara model bahasa berskala besar (*Large Language Models* / LLM) tanpa penambatan domain (*grounding*) rentan memproduksi halusinasi faktual kritis—seperti mengarang pasal peraturan, memanipulasi batas kredit studi (SKS), dan keliru menyebutkan batas waktu pembayaran. Di sisi lain, interaksi konsultasi mahasiswa di era modern bersifat multimodal, di mana pertanyaan kerap diajukan dalam bentuk artefak visual seperti foto Kartu Tanda Mahasiswa (KTM), Kartu Rencana Studi (KRS), maupun kuitansi pembayaran bank. Makalah ini mengusulkan **AURA** (*Autonomous Universal Retrieval Architecture*), sebuah arsitektur cerdas percakapan dwikanal (*Web* dan *Telegram*) untuk navigasi regulasi perguruan tinggi. AURA mengintegrasikan *pipeline* temu balik dua-tahap (*two-stage neural retrieval*) yang memadukan pencarian vektor rapat (*dense vector embedding* $\text{Cohere Multilingual v3.0}$) dengan model pemeringkat ulang saraf silang-penyandi (*cross-encoder neural reranker* $\text{Cohere Rerank v3.0}$), mereduksi derau konteks regulasi hingga ke tingkat terendah. Untuk memproses masukan visual, diintegrasikan sebuah modul inferensi visi multimodal (*GPT-4o Vision*) yang mengekstraksi metadata dan rekapitulasi kredit akademik mahasiswa secara langsung dari artefak foto. Selain itu, lapisan perutean agen otonom mengaktifkan *fallback* pencarian web *live* (*SearchApi*) saat mendeteksi pertanyaan bernilai temporal dinamis, mengeliminasi keusangan informasi pada jadwal penerimaan mahasiswa dan kalender akademik. Evaluasi empiris pada **UII-Bench-50** (50 skenario institusional kompleks lintas 5 kluster) membuktikan bahwa AURA meraih **$94,2\%$ Context Relevance**, **$100,0\%$ Groundedness** (kepatuhan mutlak tanpa halusinasi), dan **$96,8\%$ Answer Relevance**, mengungguli *baseline* RAG konvensional sebesar $+18,4\%$ pada presisi faktual dengan latensi rata-rata ujung-ke-ujung sebesar $3,82$ detik.
 
-Higher education institutions operate within extensive, multi-tiered regulatory frameworks. At Universitas Islam Indonesia (UII)—one of Indonesia's premier private higher education institutions holding an institutional *Unggul* (Superior) accreditation from BAN-PT—administrative policies are codified across disparate document repositories. These encompass university-wide academic guidelines (governing credit hours, probationary status, and study leaves), faculty-specific thesis bylaws (governing undergraduate thesis prerequisites, ethical review, similarity thresholds, and defense procedures), and departmental scholarship and financial disbursement directives. 
+**Kata Kunci:** Retrieval-Augmented Generation (RAG), Pemeringkatan Ulang Cross-Encoder, AI Dokumen Multimodal, Mitigasi Halusinasi, Sistem Asistensi Akademik, Pemrosesan Bahasa Alami.
+
+---
+
+### *Abstract*
+*Navigating decentralized, high-volume institutional regulations across universities presents substantial operational friction for students, administrative advisors, and academic evaluators. Conventional keyword-based search mechanisms fail to resolve dense semantic polysemy and hierarchical academic rules, while general-purpose Large Language Models (LLMs) without domain-constrained grounding remain critically prone to hallucinations—fabricating statutory articles, degree requirements, and financial deadlines. Furthermore, real-world student advisory workflows are increasingly multimodal, requiring interpretation of physical artifacts such as Student Identification Cards (KTM), Study Plan Cards (KRS), and institutional payment vouchers. In this paper, we propose **AURA** (Autonomous Universal Retrieval Architecture), an enterprise-grade, dual-channel (Web and Telegram) conversational intelligence system designed for institutional regulatory navigation. AURA incorporates a two-stage neural retrieval pipeline combining high-dimensional dense vector embeddings ($\text{Cohere Multilingual v3.0}$) with cross-encoder neural reranking ($\text{Cohere Rerank v3.0}$), reducing retrieval noise across university regulatory corpuses. To address unstructured visual inquiries, we introduce a multimodal document parsing node powered by zero-shot visual instruction tuning ($\text{GPT-4o Vision}$) that automatically extracts structured student metadata and academic credits directly from photographic artifacts. Additionally, an autonomous agentic routing layer triggers a live web retrieval fallback ($\text{SearchApi}$) when incoming queries exhibit high temporal sensitivity, completely mitigating obsolescence in dynamic university admissions and calendar notices. Evaluated across a rigorously curated benchmark of 50 complex institutional scenarios across five distinct clusters, AURA achieves **$94.2\%$ Context Relevance**, **$100.0\%$ Groundedness** (zero-hallucination compliance), and **$96.8\%$ Answer Relevance**, outperforming single-stage dense baselines by $+18.4\%$ in factual precision while maintaining an average end-to-end latency of $3.82$ seconds.*
+
+***Keywords:*** *Retrieval-Augmented Generation (RAG), Cross-Encoder Reranking, Multimodal Document AI, Hallucination Mitigation, Academic Advising Systems, Institutional NLP.*
+
+---
+
+## I. PENDAHULUAN
+
+Institusi perguruan tinggi beroperasi di bawah kerangka regulasi formal yang sangat hierarkis, kompleks, dan terdistribusi. Pada Universitas Islam Indonesia (UII)—sebuah perguruan tinggi swasta terkemuka di Indonesia yang meraih predikat **Akreditasi Institusi Unggul** dari Badan Akreditasi Nasional Perguruan Tinggi (BAN-PT)—pedoman akademik diatur dalam berbagai dokumen terpisah. Dokumen-dokumen ini meliputi Buku Pedoman Akademik Universitas (mengatur beban SKS semester, evaluasi masa studi berkala, batas kehadiran, dan cuti akademik), Buku Panduan Tugas Akhir/Skripsi Fakultas Teknologi Industri (mengatur syarat minimal 110 SKS tanpa nilai E, batas masa berlaku SK pembimbing, batas toleransi plagiarisme Turnitin maksimal $20\%$, dan syarat yudisium), hingga peraturan spesifik kemahasiswaan dan beasiswa di bawah Direktorat Pembinaan Kemahasiswaan (DPK) serta Direktorat Pendidikan dan Pengembangan Agama Islam (DPPAI).
 
 ```mermaid
 graph TD
-    subgraph Problem_Space["Conventional Failures in Academic Information Seeking"]
+    subgraph Masalah["Kelemahan Solusi Konvensional"]
         direction TB
-        F1["Keyword Matching (Ctrl+F)"] -->|Lexical Gap| E1["Fails on Semantic Synonyms & Colloquial Inquiries"]
-        F2["General LLMs (ChatGPT/Claude)"] -->|Parametric Hallucination| E2["Fabricates Non-existent Articles & Study Rules"]
-        F3["Static Knowledge Bases"] -->|Temporal Obsolescence| E3["Fails on Current Admissions & Dynamic Deadlines"]
-        F4["Text-Only RAG Systems"] -->|Modality Barrier| E4["Cannot Parse Student Cards, KRS Slips & Receipts"]
+        M1["Pencarian Leksikal (Ctrl+F / BM25)"] -->|Kesenjangan Kosakata| G1["Gagal Memahami Sinonim & Bahasa Sehari-hari"]
+        M2["LLM Umum (ChatGPT / Claude)"] -->|Halusinasi Parametrik| G2["Mengarang Pasal, Angka SKS & Aturan Kampus"]
+        M3["Basis Data Vektor Statis"] -->|Keusangan Temporal| G3["Gagal Menjawab Jadwal PMB & Tanggal Terkini"]
+        M4["Sistem RAG Teks Tunggal"] -->|Hambatan Modalitas| G4["Tidak Mampu Membaca Foto KTM, KRS & Slip Bank"]
     end
 
-    subgraph Proposed_Solution["AURA: Autonomous Two-Stage Multimodal Solution"]
+    subgraph Solusi["AURA: Solusi Dua-Tahap & Multimodal Otonom"]
         direction TB
-        S1["Two-Stage Neural RAG"] -->|Dense Vector + Cross-Encoder| R1["High-Precision Regulatory Chunk Extraction"]
-        S2["Multimodal Vision Node"] -->|GPT-4o Document Understanding| R2["Physical Credential & KRS Credit Analysis"]
-        S3["Agentic Search Fallback"] -->|SearchApi Live Engine| R3["Real-time Temporal Grounding"]
-        S4["Deterministic Reasoning"] -->|Strict Behavioral Contract| R4["Zero-Hallucination Factual Output"]
+        S1["RAG Saraf Dua-Tahap"] -->|Dense Vector + Cross-Encoder| R1["Presisi Tinggi Ekstraksi Klausul Regulasi"]
+        S2["Node Visi Multimodal"] -->|GPT-4o Document Understanding| R2["Ekstraksi Otomatis Kredensial & Total SKS"]
+        S3["Fallback Pencarian Web"] -->|Mesin SearchApi Google Live| R3["Penambatan Temporal Real-time"]
+        S4["Penalaran Terikat Kontrak"] -->|Zero-Hallucination Policy| R4["Sintesis Faktual Mutlak dengan Sitasi Formal"]
     end
 
-    Problem_Space ==> Proposed_Solution
+    Masalah ==> Solusi
 ```
 
-Despite the official availability of these regulatory corpuses, students face chronic hurdles in extracting actionable procedural answers. Traditional search engines relying on lexical inverted indexes (e.g., BM25 or PDF keyword finders) suffer from severe vocabulary mismatches [6]. For example, a student colloquially asking *"How do I proceed if my thesis advisor has not responded for two months?"* fails to match official handbooks that formulate the scenario under the formal heading *"Procedures for the Administrative Extension and Reassignment of Undergraduate Final Project Supervisors"*.
+Terlepas dari ketersediaan dokumen regulasi tersebut dalam format digital (PDF), civitas akademika—khususnya mahasiswa tingkat akhir dan dosen pembimbing—menghadapi kendala operasional yang berulang:
+1. **Kegagalan Pencarian Berbasis Kata Kunci (*Lexical Mismatch*)**: Pendekatan pencarian leksikal berbasis indeks terbalik (seperti BM25 atau fitur pencarian kata kunci pada pembaca PDF) gagal menjembatani kesenjangan semantik antara bahasa sehari-hari mahasiswa dengan peristilahan formal regulasi [6]. Sebagai contoh, mahasiswa yang menanyakan *"Bagaimana jika pembimbing skripsi saya tidak membalas pesan selama dua bulan?"* tidak akan memperoleh hasil pada dokumen panduan karena dokumen resmi menyusun klausul tersebut di bawah judul formal *"Tata Cara Permohonan Perpanjangan Masa Bimbingan dan Penggantian Dosen Pembimbing Tugas Akhir"*.
+2. **Bahaya Halusinasi Model Bahasa Umum (*Parametric Hallucination*)**: Pemanfaatan model bahasa komersial umum tanpa penambatan basis data domain menimbulkan bahaya fatal [8], [23]. Dalam konteks hukum dan akademik, kesalahan kecil seperti keliru menyebutkan jumlah minimum SKS untuk mendaftar seminar proposal (misalnya menyebutkan 100 SKS, padahal regulasi FTI mewajibkan minimal 110 SKS) dapat mengakibatkan pembatalan ujian skripsi mahasiswa atau sanksi keterlambatan studi.
+3. **Karakteristik Masukan Multimodal di Dunia Nyata**: Mahasiswa modern berkomunikasi secara intensif menggunakan aplikasi pesan instan dan kerap menyertakan gambar: foto fisik Kartu Tanda Mahasiswa (KTM), lembar cetak Kartu Rencana Studi (KRS), tangkapan layar transkrip nilai, atau struk pembayaran bank. Sistem RAG monomodal (hanya teks) tidak memiliki kapabilitas untuk memverifikasi dokumen fisik tersebut secara langsung [1], [2].
 
-Conversely, deploying ungrounded general-purpose Large Language Models (LLMs) introduces intolerable risks [12], [24]. In academic advising, hallucinations—such as misstating minimum credit requirements for thesis defenses, asserting fictitious grade point averages (GPA), or misquoting tuition installment deadlines—induce irreversible student academic penalties or disqualifications. 
+Untuk mengatasi tantangan multidimensi ini, penelitian ini menghadirkan **AURA** (*Autonomous Universal Retrieval Architecture*), sebuah platform cerdas bertenaga **Two-Stage Neural RAG** yang terhubung secara dwikanal (*Web Application* berbasis Next.js 14 dan *Telegram Bot*). Kontribusi utama penelitian ini dirumuskan sebagai berikut:
 
-Furthermore, empirical usage analyses reveal that university students routinely communicate via mobile instant messaging and submit queries coupled with images: photos of their Student Identification Cards (KTM), study plan slips (KRS), bank transaction printouts, or event flyers. Monomodal (text-only) Retrieval-Augmented Generation (RAG) pipelines fail completely when presented with such multi-format queries [1], [2].
-
-To resolve these interconnected challenges, we present **AURA** (*Autonomous Universal Retrieval Architecture*), an academic advising intelligence platform deployed in active production at [https://imuii-ai-rag.vercel.app/](https://imuii-ai-rag.vercel.app/). The primary contributions of this paper are summarized as follows:
-
-1. **Two-Stage Neural Cross-Encoder Retrieval**: We architect a hierarchical information retrieval pipeline combining dense semantic vector search (Pinecone) with cross-encoder neural reranking (Cohere Rerank v3.0). This configuration filters irrelevant administrative clauses and elevates the most legally binding passages to the top-k context window.
-2. **Multimodal Academic Credential Understanding**: We establish an end-to-end multimodal document comprehension node utilizing visual instruction-tuned models (GPT-4o Vision) that transcribes, parses, and validates tabular academic records (KRS credit totals, student identification numbers, bank receipt dates) directly into structured prompting representations.
-3. **Autonomous Dynamic Temporal Search Fallback**: We formalize an agentic decision mechanism that monitors retrieval confidence and query temporality. When incoming questions concern transient events (e.g., weekly university admission schedules or registration windows) absent from static vector indexes, the agent dynamically invokes a live search engine (SearchApi), synthesizing static bylaws with dynamic campus announcements.
-4. **Rigorous Institutional Benchmark & Zero-Hallucination Guardrails**: We construct an empirical benchmark comprising 50 institutional scenarios across five distinct functional clusters. Evaluating across the RAG Triad (Context Relevance, Groundedness, and Answer Relevance), AURA demonstrates absolute factual fidelity ($100\%$ Groundedness), outperforming standard dense RAG pipelines across all dimensions.
+1. **Arsitektur Temu Balik Saraf Dua-Tahap (*Two-Stage Neural RAG*)**: Merancang alur pemrosesan yang menggabungkan pencarian vektor berdimensi tinggi (*Pinecone* dengan model embedding dense) dan pemeringkat ulang saraf silang-penyandi (*Cohere Rerank v3.0*). Konfigurasi ini menyaring derau administratif dan menaikkan chunk dokumen yang paling relevan secara hukum ke jendela konteks prompt.
+2. **Pemahaman Kredensial Akademik Multimodal (*Multimodal Credential AI*)**: Mengembangkan node pemrosesan visual berbasis *instruction-tuned vision-language model* (*GPT-4o Vision*) yang mengekstrak metadata mahasiswa, membaca total SKS dari foto KRS, dan memvalidasi status bukti bayar bank tanpa memerlukan pustaka OCR berbasis aturan yang rentan rusak.
+3. **Mekanisme Agen Otonom dengan Fallback Pencarian Dinamis**: Memformulasikan kebijakan agen cerdas yang secara otomatis memicu pencarian web Google *live* (*SearchApi*) apabila pertanyaan mendeteksi konteks temporal (seperti gelombang pendaftaran mahasiswa baru atau pengumuman libur terkini) yang belum termaktub di basis data statis.
+4. **Evaluasi Empiris pada Tolok Ukur Institusional (UII-Bench-50)**: Membangun dataset tolok ukur 50 skenario regulasi kampus nyata lintas 5 kluster fungsional. Berdasarkan evaluasi kerangka kerja matematis **RAG Triad**, AURA mencatatkan **$100,0\%$ Groundedness** (nol halusinasi), **$94,2\%$ Context Relevance**, dan **$96,8\%$ Answer Relevance**, mengungguli sistem RAG konvensional secara signifikan.
 
 ---
 
-## II. RELATED WORK
+## II. TINJAUAN PUSTAKA
 
-### A. Retrieval-Augmented Generation (RAG) in Institutional Domains
-Retrieval-Augmented Generation (RAG), formalized by Lewis et al. [1], bridges the parametric knowledge limits of autoregressive foundation models with external non-parametric corpora. As surveyed by Gao et al. [2], RAG architectures have evolved from naive implementations—which concatenate raw top-k vector similarity matches into prompt contexts—to advanced and modular paradigms. In high-stakes specialized fields, such as legal statutes and enterprise compliance, naive RAG exhibits critical degradation due to redundant, out-of-context, or conflicting text fragments [19], [23]. Barnett et al. [19] identified seven architectural failure modes in RAG deployments, emphasizing that noise within retrieved contexts directly precipitates catastrophic model hallucinations.
+### A. Perkembangan Retrieval-Augmented Generation (RAG)
+Paradigma Retrieval-Augmented Generation pertama kali diformulasikan oleh Lewis dkk. [1] sebagai mekanisme untuk menjembatani keterbatasan pengetahuan parametrik model generatif dengan korpus non-parametrik eksternal. Sebagaimana dirangkum dalam survei komprehensif oleh Gao dkk. [2], arsitektur RAG telah berevolusi dari model *Naive RAG* (yang sekadar menggabungkan chunk vektor terdekat ke dalam prompt) menuju *Advanced RAG* dan *Agentic RAG*. Pada domain dengan kepatuhan tinggi seperti hukum dan akademik, Naive RAG terbukti mengalami degradasi performa yang parah akibat masuknya chunk teks yang tidak relevan atau bertentangan [19], [23]. Barnett dkk. [19] mengidentifikasi tujuh titik kegagalan utama dalam perancangan sistem RAG komersial dan menyimpulkan bahwa derau pada tahap penarikan dokumen merupakan penyebab utama munculnya halusinasi pada teks yang dihasilkan.
 
-### B. Dense Passage Retrieval vs. Cross-Encoder Reranking
-Standard dense retrieval models, typified by Dense Passage Retrieval (DPR) [5] and Sentence-BERT [12], map queries and text passages independently into a shared low-dimensional latent space using dual-encoder architectures:
+### B. Perbandingan Dense Bi-Encoder dan Cross-Encoder Reranking
+Sistem temu balik teks berbasis vektor rapat umumnya mengandalkan arsitektur *bi-encoder*, seperti pada Dense Passage Retrieval (DPR) [5] dan Sentence-BERT [12]. Model bi-encoder memproyeksikan kueri $q$ dan dokumen $d$ secara independen ke dalam ruang vektor berdimensi rendah:
 $$\mathcal{S}_{\text{bi}}(q, d) = \langle \mathbf{e}_q, \mathbf{e}_d \rangle$$
-While computationally scalable via Approximate Nearest Neighbor (ANN) indexes, bi-encoders fundamentally discard all token-level cross-attention between the query $q$ and document $d$ during encoding [13]. Consequently, bi-encoders struggle with nuanced legal and regulatory logic where subtle grammatical negations or conditional modifiers dictate institutional eligibility. 
+Meskipun sangat efisien dalam komputasi penelusuran tetangga terdekat (*Approximate Nearest Neighbor* / ANN), bi-encoder mengabaikan interaksi perhatian tingkat token (*token-level cross-attention*) antara kueri dan dokumen selama fase penyandian [13]. Akibatnya, bi-encoder kesulitan menangkap logika regulasi yang sensitif terhadap kata negasi atau prasyarat bersyarat.
 
-To overcome this bottleneck, Nogueira and Cho [3], [4] demonstrated that cross-encoder architectures, where $q$ and $d$ are concatenated and jointly processed through full self-attention layers:
-$$\mathcal{S}_{\text{cross}}(q, d) = \sigma(\mathbf{W} \cdot \text{Encoder}([CLS] \circ q \circ [SEP] \circ d))$$
-achieve vastly superior ranking precision. While running full cross-encoders across an entire enterprise corpus is computationally intractable, deploying them as a *second-stage reranker* over an initial candidate set ($k=20 \to k=8$) achieves optimal tradeoffs between retrieval latency and precision [4], [13].
+Untuk menanggulangi kelemahan tersebut, Nogueira dan Cho [3], [4] membuktikan bahwa model *cross-encoder*—di mana pasangan $q$ dan $d$ digabungkan dan diproses secara bersamaan melalui seluruh lapisan perhatian mandiri:
+$$\mathcal{S}_{\text{cross}}(q, d) = \sigma(\mathbf{W} \cdot \text{Transformer}([CLS] \circ q \circ [SEP] \circ d))$$
+menghasilkan presisi perangkingan yang jauh lebih tinggi. Karena komputasi cross-encoder terhadap jutaan dokumen membutuhkan daya pemrosesan yang sangat besar, penerapannya sebagai **pemeringkat ulang tahap kedua (*second-stage reranker*)** terhadap sejumlah kandidat awal ($K_1=20 \to K_2=8$) memberikan kompromi terbaik antara latensi dan ketepatan semantik [4], [13].
 
-### C. Multimodal Document Understanding
-In academic environments, administrative artifacts frequently manifest as semi-structured tabular images (transcripts, matriculation cards, deposit receipts). Traditional pipelines rely on Optical Character Recognition (OCR) engines (e.g., Tesseract) pipelined into heuristic string parsers, which collapse when confronted with uneven photographic lighting, skew, or localized physical damage. Recent breakthroughs in visual instruction tuning, notably LLaVA [14] and GPT-4o [11], demonstrate robust zero-shot scene-text parsing and spatial layout reasoning directly within the transformer backbone, obviating fragile heuristic OCR intermediaries.
+### C. Pemahaman Dokumen Visual Multimodal
+Dalam operasional perguruan tinggi, artefak administratif kerap berwujud citra semi-terstruktur (KRS, transkrip nilai, bukti transfer). Pendekatan tradisional yang mengandalkan Optical Character Recognition (OCR) seperti Tesseract yang dipadukan dengan parser *regular expression* terbukti rentan mengalami kegagalan saat berhadapan dengan foto yang miring, pencahayaan buruk, atau lipatan kertas fisik. Terobosan terbaru dalam *visual instruction tuning*, seperti pada LLaVA [14] dan GPT-4o [11], memungkinkan model memahami tata letak visual, tabel, dan teks secara langsung di dalam representasi saraf tanpa memerlukan perantara modul OCR heuristik yang kaku.
 
 ---
 
-## III. SYSTEM ARCHITECTURE & MATHEMATICAL FORMULATION
+## III. METODOLOGI PENELITIAN & PERANCANGAN ARSITEKTUR
 
-The structural topology of AURA is organized into four interconnected functional layers: (1) Ingestion and Knowledge Engineering, (2) Dual-Stage Neural Retrieval, (3) Multimodal Credential Interpretation, and (4) Agentic Decision and Grounded Generation.
+Arsitektur AURA dirancang secara modular dan terbagi ke dalam empat subsistem utama: (1) Rekayasa Pengetahuan dan Perayapan Web, (2) Temu Balik Saraf Dua-Tahap, (3) Pemrosesan Kredensial Multimodal, dan (4) Mesin Keputusan Agen Otonom.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Student as Student (Web / Telegram)
-    participant Channel as Channel Gateway (Next.js / Telegram)
-    participant Vision as Multimodal Vision Node (GPT-4o)
-    participant Agent as Autonomous Agent Core
-    participant Pinecone as Vector Store (imuiirags2)
-    participant Rerank as Cohere Reranker v3.0
-    participant SearchApi as SearchApi Live Tool
-    participant LLM as Grounded LLM (DeepSeek / GPT-4.1)
+    actor Mahasiswa as Mahasiswa (Web / Telegram)
+    participant Gateway as Kanal Antarmuka (Next.js / Telegram)
+    participant Visi as Node Visi Multimodal (GPT-4o)
+    participant Agen as Agen Penalaran Otonom
+    participant Pinecone as Pinecone Vector Store (imuiirags2)
+    participant Reranker as Cohere Neural Reranker v3.0
+    participant WebSearch as Alat SearchApi Google Live
+    participant LLM as Mesin Generasi Grounded (DeepSeek / GPT-4.1)
 
-    Student->>Channel: Submit Query (Text or Photo Attachment)
-    alt Contains Image Attachment (KTM / KRS / Slip)
-        Channel->>Vision: Dispatch Image Binary
-        Vision-->>Agent: Synthesized Tabular Metadata (JSON/Text)
-    else Pure Text
-        Channel->>Agent: Forward Raw Query Text
+    Mahasiswa->>Gateway: Kirim Pertanyaan (Teks atau Lampiran Foto)
+    alt Terdapat Lampiran Gambar (KTM / KRS / Slip Bank)
+        Gateway->>Visi: Unggah Data Biner Citra
+        Visi-->>Agen: Ekstraksi Metadata & Rekapitulasi SKS (Format Terstruktur)
+    else Teks Murni
+        Gateway->>Agen: Teruskan Kueri Teks Mentah
     end
 
-    Agent->>Pinecone: Execute Dense Vector Search (Top-20 Nearest)
-    Pinecone-->>Agent: Candidate Chunks D_cand
-    Agent->>Rerank: Joint Score Evaluation (Query, D_cand)
-    Rerank-->>Agent: Top-8 High Precision Chunks D_rerank
+    Agen->>Pinecone: Eksekusi Pencarian Vektor Rapat (Top-20 Kandidat)
+    Pinecone-->>Agen: Set Dokumen Kandidat D_cand
+    Agen->>Reranker: Evaluasi Skor Perhatian Bersama (Kueri, D_cand)
+    Reranker-->>Agen: Set Dokumen Presisi Tinggi (Top-8 Chunk D_rerank)
 
-    alt Rerank Confidence < Tau OR Temporal Signal Detected
-        Agent->>SearchApi: Execute Targeted Live Search
-        SearchApi-->>Agent: Fresh Real-Time Regulatory Snippets
+    alt Skor Keyakinan < Ambang Batas ATAU Sinyal Temporal Terdeteksi
+        Agen->>WebSearch: Eksekusi Pencarian Web Google Terarah
+        WebSearch-->>Agen: Potongan Berita Resmi & Kalender Kampus Terkini
     end
 
-    Agent->>LLM: Ingest Grounded System Prompt + Context + Query
-    LLM-->>Agent: Deterministic Grounded Synthesis with Citations
-    Agent-->>Channel: Return Structured Response
-    Channel-->>Student: Display Markdown with Formal Academic Citations
+    Agen->>LLM: Injeksi Prompt Sistem Grounded + Konteks + Kueri
+    LLM-->>Agen: Sintesis Jawaban Terikat Konteks dengan Sitasi Formal
+    Agen-->>Gateway: Kembalikan Payload Terstruktur
+    Gateway-->>Mahasiswa: Tampilkan Jawaban Markdown & Sitasi Resmi
 ```
 
-### A. Formal Problem Formulation
-Let $\mathcal{C} = \{c_1, c_2, \dots, c_N\}$ denote the authoritative institutional corpus comprising $N$ text chunks derived from official university handbooks, faculty decree PDFs, and accredited web domains. A user query is represented as a tuple $\mathcal{Q} = (q_{\text{text}}, \mathcal{I}_{\text{visual}})$, where $q_{\text{text}}$ is the natural language question and $\mathcal{I}_{\text{visual}} \in \{\emptyset, \mathbb{R}^{H \times W \times C}\}$ represents an optional photographic artifact. The system objective is to generate a natural language response $\mathcal{A}$ that satisfies:
-$$\mathcal{A} = \arg\max_{\hat{\mathcal{A}}} P(\hat{\mathcal{A}} \mid q_{\text{text}}, \Phi(\mathcal{I}_{\text{visual}}), \mathcal{D}^*)$$
-subject to the strict constraint that every factual proposition $f \in \mathcal{A}$ is entailed by $\mathcal{D}^* \cup \Phi(\mathcal{I}_{\text{visual}})$, where $\Phi(\cdot)$ denotes the visual inference mapping and $\mathcal{D}^* \subset \mathcal{C}$ denotes the retrieved context chunks.
+### A. Formulasi Masalah Matematis
+Misalkan $\mathcal{C} = \{c_1, c_2, \dots, c_N\}$ merepresentasikan korpus pengetahuan akademik resmi yang memuat $N$ potongan teks (*chunks*) dari buku pedoman akademik, surat keputusan rektor, dan laman web resmi institusi. Pertanyaan pengguna dimodelkan sebagai tupel $\mathcal{Q} = (q_{\text{teks}}, \mathcal{I}_{\text{visual}})$, di mana $q_{\text{teks}}$ adalah kalimat pertanyaan bahasa alami dan $\mathcal{I}_{\text{visual}} \in \{\emptyset, \mathbb{R}^{H \times W \times C}\}$ melambangkan artefak visual fisik opsional. Tujuan sistem adalah membangkitkan respon bahasa alami $\mathcal{A}$ yang memaksimalkan probabilitas:
+$$\mathcal{A} = \arg\max_{\hat{\mathcal{A}}} P(\hat{\mathcal{A}} \mid q_{\text{teks}}, \Phi(\mathcal{I}_{\text{visual}}), \mathcal{D}^*)$$
+dengan batasan mutlak (*hard constraint*) bahwa setiap proposisi faktual $f \in \mathcal{A}$ harus didukung secara logis oleh konteks yang ditarik:
+$$\forall f \in \mathcal{A}, \quad (\mathcal{D}^* \cup \Phi(\mathcal{I}_{\text{visual}})) \models f$$
+di mana $\Phi(\cdot)$ melambangkan fungsi inferensi visual dan $\mathcal{D}^* \subset \mathcal{C}$ melambangkan potongan dokumen rujukan teratas.
 
-### B. Knowledge Engineering and Web Ingestion Pipeline
-To establish a verifiable institutional ground truth, we developed an automated polite crawler (`scrape_uii.py`) targeting 16 designated subdomains across the university hierarchy:
-$$\mathcal{U}_{\text{domains}} = \{\text{www}, \text{pmb}, \text{fit}, \text{fcep}, \text{economics}, \text{fecon}, \text{law}, \text{psychology}, \text{library}, \text{kemahasiswaan}, \text{dppai}, \text{kontak}, \dots\} \subset \text{uii.ac.id}$$
+### B. Rekayasa Pengetahuan dan Perayapan Web
+Untuk membangun basis data pengetahuan yang representatif, dikembangkan perayap web otomatis (`scripts/scrape_uii.py`) yang menelusuri 16 subdomain resmi universitas:
+$$\mathcal{U}_{\text{domain}} = \{\text{www}, \text{pmb}, \text{fit}, \text{fcep}, \text{economics}, \text{fecon}, \text{law}, \text{psychology}, \text{library}, \text{kemahasiswaan}, \text{dppai}, \text{kontak}, \dots\} \subset \text{uii.ac.id}$$
 
-The crawler enforces a polite delay threshold $\Delta t = 1.0\text{ s}$ and extracts raw HTML, stripping non-content elements (scripts, styling, navigation carousels). To preserve semantic markdown structure without HTML boilerplate, extracted URLs are parsed through the Jina Reader API:
-$$d_{\text{clean}} = \text{JinaReader}(\text{URL}(c_i))$$
+Perayap memberlakukan jeda waktu santun $\Delta t = 1,0\text{ detik}$ antar-permintaan HTTP dan mengabaikan berkas biner media. Agar struktur semantik dokumen terjaga bebas dari elemen menu, skrip iklan, dan *footer*, seluruh URL hasil perayapan diproses melalui mesin pengubah Markdown Jina Reader API:
+$$d_{\text{bersih}} = \text{JinaReader}(\text{URL}(c_i))$$
 
-Each cleansed document is processed via a Recursive Character Text Splitter with a target window size $L = 1000$ characters and an overlap $\omega = 200$ characters:
-$$\mathcal{C} = \bigcup_{i} \text{RecursiveSplit}(d_{\text{clean}}^{(i)}, L=1000, \omega=200)$$
+Dokumen Markdown bersih selanjutnya dipecah menggunakan *Recursive Character Text Splitter* dengan ukuran jendela $L = 1000$ karakter dan tumpang-tindih (*overlap*) $\omega = 200$ karakter:
+$$\mathcal{C} = \bigcup_{i} \text{RecursiveSplit}(d_{\text{bersih}}^{(i)}, L=1000, \omega=200)$$
 
-To resolve known evaluation gaps identified during preliminary trials (specifically Gap #42 and #44 regarding institutional accreditation status and direct administrative lines), a canonical gap resolution module (`generate_uii_kontak_txt.py`) injects authoritative administrative and BAN-PT *Unggul* accreditation records into the cloud knowledge vault.
+Untuk menyelesaikan celah evaluasi akademik yang kerap gagal dideteksi perayap umum (tercatat sebagai Gap #42 dan #44 mengenai status Akreditasi Institusi Unggul BAN-PT 2022 dan nomor telepon kantor rektorat), dibuat skrip kanonikal `generate_uii_kontak_txt.py` yang menyuntikkan dokumen data kontak dan akreditasi resmi ke repositori awan Google Drive `IMUIIRAGS` (`ID: 1l_GfI6NnC4Q32ZnvBCS0DXMoTU2GXr65`).
 
-### C. Mathematical Formulation of Two-Stage Retrieval
+### C. Formulasi Temu Balik Saraf Dua-Tahap
 
-#### Stage 1: Dense Bi-Encoder Candidate Generation
-The query text $q$ is mapped into a high-dimensional dense metric space using a multilingual embedding model $E_Q(\cdot)$:
-$$\mathbf{e}_q = E_Q(q) \in \mathbb{R}^D, \quad \text{where } D = 1024 \text{ (Cohere Multilingual v3.0)}$$
-Similarly, all corpus passages $c_i \in \mathcal{C}$ are pre-computed as vectors $\mathbf{e}_{c_i} \in \mathbb{R}^D$. Candidate retrieval is computed over the Pinecone serverless index using Cosine Similarity:
+#### Tahap 1: Pembangkitan Kandidat Vektor Rapat (Dense Retrieval)
+Teks kueri $q$ dipetakan ke dalam ruang metrik berdimensi $D = 1024$ menggunakan model penanaman vektor multibahasa $\text{Cohere Multilingual v3.0}$:
+$$\mathbf{e}_q = E_Q(q) \in \mathbb{R}^{1024}$$
+Serupa dengan itu, seluruh chunk korpus $c_i \in \mathcal{C}$ telah dipra-komputasi menjadi vektor $\mathbf{e}_{c_i} \in \mathbb{R}^{1024}$. Penelusuran kandidat awal dihitung pada indeks nirserver Pinecone (`imuiirags2`) menggunakan kesamaan kosinus (*Cosine Similarity*):
 $$\mathcal{S}_{\text{dense}}(q, c_i) = \frac{\mathbf{e}_q^\top \mathbf{e}_{c_i}}{\|\mathbf{e}_q\|_2 \|\mathbf{e}_{c_i}\|_2}$$
-The candidate set $\mathcal{D}_{\text{cand}}$ selects the top-$K_1$ highest-scoring vectors ($K_1 = 20$):
-$$\mathcal{D}_{\text{cand}} = \arg\operatorname{top-}K_1_{c_i \in \mathcal{C}} \left( \mathcal{S}_{\text{dense}}(q, c_i) \right)$$
+Himpunan kandidat $\mathcal{D}_{\text{kandidat}}$ mengumpulkan $K_1 = 20$ dokumen dengan skor tertinggi:
+$$\mathcal{D}_{\text{kandidat}} = \arg\operatorname{top-}K_1_{c_i \in \mathcal{C}} \left( \mathcal{S}_{\text{dense}}(q, c_i) \right)$$
 
-#### Stage 2: Cross-Encoder Neural Reranking
-While $\mathcal{D}_{\text{cand}}$ exhibits high semantic recall, dense embeddings frequently suffer from false-positive matches due to vector space compression. To enforce strict semantic relevance, each pair $(q, c_j)$ for $c_j \in \mathcal{D}_{\text{cand}}$ is submitted to a neural cross-encoder model:
+#### Tahap 2: Pemeringkatan Ulang Saraf Silang-Penyandi (Cross-Encoder Reranking)
+Meskipun $\mathcal{D}_{\text{kandidat}}$ memiliki *recall* yang memadai, representasi bi-encoder sering membawa dokumen yang mirip secara topik namun tidak relevan secara hukum. Setiap pasangan $(q, c_j)$ untuk $c_j \in \mathcal{D}_{\text{kandidat}}$ kemudian diproses ulang menggunakan model cross-encoder $\text{Cohere Rerank v3.0}$:
 $$\mathcal{S}_{\text{rerank}}(q, c_j) = \text{CrossEncoder}(q, c_j) \in [0, 1]$$
-where full bi-directional self-attention is computed across all concatenated token positions. The refined context set $\mathcal{D}^*$ is extracted by selecting the top-$K_2$ candidates ($K_2 = 8$):
-$$\mathcal{D}^* = \arg\operatorname{top-}K_2_{c_j \in \mathcal{D}_{\text{cand}}} \left( \mathcal{S}_{\text{rerank}}(q, c_j) \right)$$
+di mana perhitungan interaksi perhatian mandiri antar seluruh pasangan token kueri dan dokumen dievaluasi secara penuh. Himpunan konteks akhir $\mathcal{D}^*$ diperoleh dengan memilih $K_2 = 8$ kandidat terbaik:
+$$\mathcal{D}^* = \arg\operatorname{top-}K_2_{c_j \in \mathcal{D}_{\text{kandidat}}} \left( \mathcal{S}_{\text{rerank}}(q, c_j) \right)$$
 
-### D. Multimodal Document Parsing Formulation
-When an inquiry contains a visual artifact $\mathcal{I}_{\text{visual}} \ne \emptyset$ (e.g., a photograph of a student's Study Plan Card or tuition receipt), the image is ingested via the visual inference node:
-$$\mathbf{T}_{\text{meta}} = \Phi_{\text{vision}}(\mathcal{I}_{\text{visual}}; \theta_{\text{GPT-4o}})$$
-where $\mathbf{T}_{\text{meta}}$ is a structured JSON schema extracting:
-$$\mathbf{T}_{\text{meta}} = \left\{ \text{Type}: \{\text{KTM}, \text{KRS}, \text{BankReceipt}\}, \text{ID}: \text{NIM}, \text{CreditsAccumulated}: \sum \text{SKS}, \text{PaymentStatus}: \text{bool} \right\}$$
-The augmented query presented to the retrieval pipeline becomes:
-$$\tilde{q} = q_{\text{text}} \oplus \text{FormatPrompt}(\mathbf{T}_{\text{meta}})$$
+### D. Pemrosesan Dokumen Kredensial Multimodal
+Apabila masukan mahasiswa memuat artefak visual $\mathcal{I}_{\text{visual}} \ne \emptyset$ (foto fisik KTM, slip cetak KRS, atau kuitansi bank), citra tersebut dialirkan ke node inferensi visi:
+$$\mathbf{T}_{\text{meta}} = \Phi_{\text{visi}}(\mathcal{I}_{\text{visual}}; \theta_{\text{GPT-4o}})$$
+di mana $\mathbf{T}_{\text{meta}}$ memproduksi skema data JSON terstruktur:
+$$\mathbf{T}_{\text{meta}} = \left\{ \text{Tipe}: \{\text{KTM}, \text{KRS}, \text{SlipBank}\}, \text{NIM}: \text{string}, \text{TotalSKS}: \sum \text{SKS}, \text{StatusLulus}: \text{bool} \right\}$$
+Kueri yang diajukan ke mesin temu balik selanjutnya diperkaya secara kontekstual:
+$$\tilde{q} = q_{\text{teks}} \oplus \text{FormatPrompt}(\mathbf{T}_{\text{meta}})$$
 
-### E. Autonomous Dynamic Search Fallback Policy
-To resolve queries addressing volatile real-time institutional deadlines (e.g., ongoing new student admission waves or emergent campus closures), the system evaluates an autonomous fallback policy $\delta(q)$:
+### E. Kebijakan Fallback Pencarian Web Dinamis
+Guna mengantisipasi pertanyaan seputar tenggat waktu dinamis atau pengumuman universitas terkini yang belum tercatat pada dokumen statis, agen mengevaluasi fungsi keputusan fallback $\delta(q)$:
 $$\delta(q) = \begin{cases} 
-1, & \text{if } \max_{c \in \mathcal{D}^*} \mathcal{S}_{\text{rerank}}(q, c) < \tau_{\text{threshold}} \lor \Psi_{\text{temporal}}(q) = \text{True} \\ 
-0, & \text{otherwise} 
+1, & \text{jika } \max_{c \in \mathcal{D}^*} \mathcal{S}_{\text{rerank}}(q, c) < \tau_{\text{ambang}} \lor \Psi_{\text{temporal}}(q) = \text{True} \\ 
+0, & \text{lainnya} 
 \end{cases}$$
-where $\tau_{\text{threshold}} = 0.65$ and $\Psi_{\text{temporal}}(q)$ is a zero-shot classifier detecting explicit time markers (e.g., "hari ini", "minggu ini", "gelombang 3 tahun 2026"). If $\delta(q) = 1$, AURA dynamically executes a Google web search via the SearchApi tool, retrieving real-time university news snippets $\mathcal{D}_{\text{web}}$ and constructing the final synthesis context as $\mathcal{D}_{\text{final}} = \mathcal{D}^* \cup \mathcal{D}_{\text{web}}$.
+di mana $\tau_{\text{ambang}} = 0,65$ dan $\Psi_{\text{temporal}}(q)$ mendeteksi penanda waktu relatif (seperti *"hari ini"*, *"minggu depan"*, *"gelombang 3 PMB 2026"*). Jika $\delta(q) = 1$, AURA memicu pencarian Google secara *live* melalui node SearchApi, menggabungkan data berita mutakhir $\mathcal{D}_{\text{web}}$ ke dalam konteks penalaran akhir: $\mathcal{D}_{\text{final}} = \mathcal{D}^* \cup \mathcal{D}_{\text{web}}$.
 
 ---
 
-## IV. EXPERIMENTAL SETUP & BENCHMARK DESIGN
+## IV. DESAIN EKSPERIMEN & PENGUJIAN BENCHMARK
 
-### A. The Institutional Evaluation Dataset (UII-Bench-50)
-To assess system efficacy under rigorous operational conditions, we constructed **UII-Bench-50**, a benchmark suite comprising 50 realistic, high-impact institutional query scenarios reviewed by university advisors. The benchmark is stratified across five functional clusters:
+### A. Dataset Tolok Ukur Institusional (UII-Bench-50)
+Untuk menguji keandalan sistem secara empiris, disusun dataset tolok ukur **UII-Bench-50** yang mencakup 50 skenario kasus nyata mahasiswa yang divalidasi langsung terhadap peraturan universitas resmi. Dataset ini terbagi rata ke dalam lima kluster spesifik:
 
 ```mermaid
-pie title UII-Bench-50 Distribution Across Functional Clusters
-    "Cluster 1: General Academic & Study Load Rules" : 10
-    "Cluster 2: FTI Thesis Bylaws & Defense Criteria" : 10
-    "Cluster 3: Institutional Scholarships & Student Welfare" : 10
-    "Cluster 4: Gap-Resolution & Departmental Logistics" : 10
-    "Cluster 5: Multimodal Credential & KRS Document Inquiries" : 10
+pie title Distribusi 50 Skenario Uji pada UII-Bench-50
+    "Kluster 1: Aturan Beban Studi & Akademik Umum" : 10
+    "Kluster 2: Regulasi Skripsi & Prasyarat FTI" : 10
+    "Kluster 3: Beasiswa & Layanan Kemahasiswaan" : 10
+    "Kluster 4: Resolusi Celah Kontak & Fakultas" : 10
+    "Kluster 5: Masukan Multimodal Foto Dokumen" : 10
 ```
 
-1. **Cluster 1: General Academic & Study Load Regulations (10 Scenarios)**: Maximum allowable credit hours relative to GPA, official sabbatical (leave of absence) protocols, administrative dismissal policies, and remedial semester regulations.
-2. **Cluster 2: FTI Thesis Bylaws & Defense Criteria (10 Scenarios)**: Exact minimum credit threshold for thesis proposal registration (110 credits, GPA $\ge 2.00$, zero 'E' grades), Turnitin similarity indices ($\le 20\%$), and supervisor reassignment policies.
-3. **Cluster 3: Institutional Scholarships & Student Welfare (10 Scenarios)**: Santri Unggulan scholarships, athletic and artistic achievement grants, and formal tuition installment extension workflows.
-4. **Cluster 4: Gap-Resolution & Departmental Logistics (10 Scenarios)**: Canonical address, official telephone and facsimile channels, Institutional BAN-PT *Unggul* certification (Gaps #42, #44), Law School PKPA criteria (Gap #6), and Psychology diagnostic laboratory requisites (Gap #11).
-5. **Cluster 5: Multimodal Photographic Credential Inquiries (10 Scenarios)**: Automated credit tallying from blurry KRS images, student cohort extraction from physical KTM cards, and payment verification from ATM deposit slips.
+1. **Kluster 1: Regulasi Studi & Beban Akademik Umum (10 Kasus)**: Batas SKS maksimal berdasarkan IPK semester sebelumnya, alur permohonan cuti resmi, sanksi drop-out (DO), dan tata tertib semester antara.
+2. **Kluster 2: Regulasi Skripsi & Prasyarat FTI (10 Kasus)**: Syarat SKS minimal seminar proposal (110 SKS, IPK $\ge 2,00$, tanpa nilai E), perpanjangan SK pembimbing yang kedaluwarsa (maksimal 6 bulan), dan ambang batas plagiarisme Turnitin ($\le 20\%$).
+3. **Kluster 3: Beasiswa & Layanan Kemahasiswaan (10 Kasus)**: Persyaratan Beasiswa Santri Unggulan, beasiswa prestasi olahraga/seni, dan prosedur permohonan penundaan pembayaran SPP.
+4. **Kluster 4: Resolusi Celah Kontak & Fakultas (10 Kasus)**: Alamat resmi gedung rektorat GBPH Prabuningrat, nomor telepon DAA, nomor sertifikat Akreditasi Institusi Unggul BAN-PT 2022 (Gap #42, #44), kurikulum PKPA Hukum (Gap #6), dan praktikum Psikologi (Gap #11).
+5. **Kluster 5: Masukan Multimodal Foto Dokumen (10 Kasus)**: Penghitungan total SKS dari lembar cetak KRS, ekstraksi angkatan mahasiswa dari foto fisik KTM, dan validasi angsuran dari slip setor bank.
 
-### B. Baseline Systems for Empirical Comparison
-We benchmark AURA against three representative architectures widely implemented in enterprise and academic conversational agents:
-* **Baseline 1 (Lexical BM25)**: An inverted-index lexical matching baseline utilizing BM25 ranking over scraped university documents [6].
-* **Baseline 2 (Naive Dense Vector RAG)**: A standard single-stage dense bi-encoder pipeline utilizing OpenAI `text-embedding-3-small` (1536-dim) with Pinecone Cosine retrieval ($k=8$) feeding directly to the generator without neural reranking [1].
-* **Baseline 3 (Dense Hybrid without Agentic Fallback)**: A two-stage RAG architecture incorporating Cohere Rerank v3.0, but lacking the multimodal vision node and real-time SearchApi fallback.
-* **Proposed (AURA Complete)**: The complete proposed architecture integrating Two-Stage Neural RAG, Multimodal Document Parsing (GPT-4o Vision), Agentic Dynamic Search Fallback, and Strict Grounding Guardrails.
+### B. Model Baseline Pembanding
+Performa AURA dibandingkan secara langsung dengan tiga arsitektur sistem temu balik yang lazim diterapkan:
+* **Baseline 1 (Leksikal BM25)**: Sistem pencarian berbasis pencocokan kata kunci BM25 pada dokumen hasil perayapan [6].
+* **Baseline 2 (Naive Dense Vector RAG)**: Pipeline RAG berbasis vektor tunggal (*single-stage*) menggunakan OpenAI `text-embedding-3-small` (1536-dim) pada Pinecone tanpa model pemeringkat ulang [1].
+* **Baseline 3 (Two-Stage Dense RAG Tanpa Agen Otonom)**: Arsitektur RAG dua-tahap dengan pemeringkat ulang Cohere Rerank v3.0, namun tanpa modul visi multimodal dan tanpa fallback pencarian web dinamis.
+* **AURA (Arsitektur Lengkap yang Diusulkan)**: Arsitektur penuh yang menggabungkan RAG Saraf Dua-Tahap, Node Visi Multimodal (GPT-4o Vision), Fallback Pencarian Dinamis (SearchApi), dan Kontrak Penalaran Nol-Halusinasi.
 
-### C. Quantitative Evaluation Metrics
-We evaluate system performance using the mathematically formalized **RAG Triad** framework [10]:
+### C. Metrik Evaluasi Kuantitatif RAG Triad
+Evaluasi dilakukan secara kuantitatif menggunakan kerangka metrik formal **RAG Triad** [9]:
 
-#### 1. Context Relevance ($CR$)
-Measures the proportion of retrieved sentences that contain verifiable semantic evidence addressing query $Q$:
-$$CR = \frac{|\{s \in \mathcal{D}^* \mid s \text{ is semantically relevant to } Q\}|}{|\{s \in \mathcal{D}^*\}|}$$
+#### 1. Relevansi Konteks (*Context Relevance* / $CR$)
+Mengukur proporsi kalimat dalam chunk terambil $\mathcal{D}^*$ yang secara spesifik memuat informasi yang dibutuhkan untuk menjawab kueri $Q$:
+$$CR = \frac{|\{s \in \mathcal{D}^* \mid s \text{ relevan secara semantik terhadap } Q\}|}{|\{s \in \mathcal{D}^*\}|}$$
 
-#### 2. Groundedness / Faithfulness ($G$)
-Quantifies the proportion of factual statements in generated response $\mathcal{A}$ that are directly entailed by context $\mathcal{D}^*$:
+#### 2. Keterikatan Faktual (*Groundedness / Faithfulness* / $G$)
+Menghitung rasio klaim faktual dalam jawaban $\mathcal{A}$ yang memiliki bukti rujukan eksplisit dalam konteks $\mathcal{D}^*$:
 $$G = \frac{|\{f \in \mathcal{F}(\mathcal{A}) \mid \mathcal{D}^* \models f\}|}{|\mathcal{F}(\mathcal{A})|}$$
-where $\mathcal{F}(\mathcal{A})$ represents the atomic factual statements decomposed from $\mathcal{A}$ using an external fact-extraction protocol [17]. A single ungrounded claim results in $G < 1.0$.
+di mana $\mathcal{F}(\mathcal{A})$ melambangkan himpunan atomik klaim faktual yang diekstraksi dari jawaban [17]. Munculnya satu klaim fiktif menyebabkan skor $G < 1,0$.
 
-#### 3. Answer Relevance ($AR$)
-Evaluates the semantic alignment between query $Q$ and response $\mathcal{A}$, penalizing evasive or redundant generations:
+#### 3. Relevansi Jawaban (*Answer Relevance* / $AR$)
+Mengukur kedekatan semantik kosinus antara kueri $Q$ dengan jawaban yang dihasilkan $\mathcal{A}$:
 $$AR = \frac{\mathbf{e}_Q^\top \mathbf{e}_{\mathcal{A}}}{\|\mathbf{e}_Q\|_2 \|\mathbf{e}_{\mathcal{A}}\|_2}$$
 
-#### 4. Harmonic RAG Triad Score ($RTS$)
-To capture overall pipeline equilibrium without allowing one strong metric to obscure severe failure in another, we compute the generalized harmonic mean:
-$$RTS = \frac{3}{\frac{1}{CR} + \frac{1}{G} + \frac{1}{AR}} = \frac{3 \cdot CR \cdot G \cdot AR}{CR \cdot G + G \cdot AR + CR \cdot AR}$$
+#### 4. Skor Harmonis RAG Triad (*Harmonic Triad Score* / $RTS$)
+Rata-rata harmonis ketiga metrik untuk merefleksikan keseimbangan sistem secara menyeluruh:
+$$RTS = \frac{3 \cdot CR \cdot G \cdot AR}{CR \cdot G + G \cdot AR + CR \cdot AR}$$
 
 ---
 
-## V. RESULTS & DISCUSSION
+## V. HASIL DAN PEMBAHASAN
 
-### A. Quantitative Performance Comparison
-Table I summarizes the empirical evaluation across the 50 institutional scenarios in UII-Bench-50.
+### A. Evaluasi Kuantitatif Komparatif
+Tabel I menyajikan hasil evaluasi kinerja keempat arsitektur sistem pada 50 skenario uji UII-Bench-50.
 
 ```mermaid
 bar-chart
-    title RAG Triad Metric Comparison Across Architectures (%)
-    x-axis ["Lexical BM25", "Naive Dense RAG", "Two-Stage Dense RAG", "AURA (Proposed)"]
-    y-axis "Percentage (%)" 0 --> 100
+    title Perbandingan Kinerja Metrik RAG Triad (%)
+    x-axis ["Leksikal BM25", "Naive Dense RAG", "Two-Stage Dense RAG", "AURA (Diusulkan)"]
+    y-axis "Persentase (%)" 0 --> 100
     "Context Relevance" : [54.2, 75.8, 88.4, 94.2]
     "Groundedness" : [68.5, 78.4, 91.2, 100.0]
     "Answer Relevance" : [61.0, 81.2, 89.6, 96.8]
     "Harmonic RTS" : [60.6, 78.3, 89.7, 96.9]
 ```
 
-**TABLE I: Quantitative Performance Evaluation on UII-Bench-50**
-| Architecture Model | Context Relevance ($CR$) | Groundedness ($G$) | Answer Relevance ($AR$) | Harmonic Triad ($RTS$) | Latency (s) | Hallucination Rate ($\%$) |
+**TABEL I: Evaluasi Kinerja Kuantitatif pada Tolok Ukur UII-Bench-50**
+| Arsitektur Sistem | Context Relevance ($CR$) | Groundedness ($G$) | Answer Relevance ($AR$) | Harmonic Triad ($RTS$) | Latensi Rata-rata | Tingkat Halusinasi |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Baseline 1 (Lexical BM25) | $54.2\%$ | $68.5\%$ | $61.0\%$ | $60.6\%$ | **$1.15$ s** | $31.5\%$ |
-| Baseline 2 (Naive Dense RAG) | $75.8\%$ | $78.4\%$ | $81.2\%$ | $78.3\%$ | $2.42$ s | $21.6\%$ |
-| Baseline 3 (Two-Stage Dense RAG) | $88.4\%$ | $91.2\%$ | $89.6\%$ | $89.7\%$ | $3.18$ s | $8.8\%$ |
-| **AURA (Proposed Complete)** | **$\mathbf{94.2\%}$** | **$\mathbf{100.0\%}$** | **$\mathbf{96.8\%}$** | **$\mathbf{96.9\%}$** | $3.82$ s | **$\mathbf{0.0\%}$** |
+| Baseline 1 (Leksikal BM25) | $54,2\%$ | $68,5\%$ | $61,0\%$ | $60,6\%$ | **$1,15$ s** | $31,5\%$ |
+| Baseline 2 (Naive Dense RAG) | $75,8\%$ | $78,4\%$ | $81,2\%$ | $78,3\%$ | $2,42$ s | $21,6\%$ |
+| Baseline 3 (Two-Stage Dense RAG) | $88,4\%$ | $91,2\%$ | $89,6\%$ | $89,7\%$ | $3,18$ s | $8,8\%$ |
+| **AURA (Arsitektur Lengkap Diusulkan)** | **$\mathbf{94,2\%}$** | **$\mathbf{100,0\%}$** | **$\mathbf{96,8\%}$** | **$\mathbf{96,9\%}$** | $3,82$ s | **$\mathbf{0,0\%}$** |
 
-As shown in Table I, **AURA outperforms all baseline configurations across all evaluation dimensions**, achieving an overall Harmonic RAG Triad Score of **$96.9\%$**. 
+Berdasarkan hasil pada Tabel I, **AURA mengungguli seluruh model pembanding di setiap dimensi evaluasi**, mencatatkan skor harmonis akhir sebesar **$96,9\%$**.
 
-1. **Impact of Cross-Encoder Reranking**: Comparing Baseline 2 (Naive Dense) with Baseline 3 reveals that integrating Cohere Rerank v3.0 yields a substantial $+12.6\%$ gain in Context Relevance ($75.8\% \to 88.4\%$) and reduces the hallucination rate from $21.6\%$ to $8.8\%$. This confirms our hypothesis (RQ1) that dense vector search alone admits noisy administrative clauses that mislead subsequent LLM generation.
-2. **Absolute Zero-Hallucination Compliance**: AURA achieves an uncompromised Groundedness score of **$100.0\%$**, eliminating all fabricated statutory claims across the 50 benchmark cases. Under Baseline 2, the model frequently fabricated SKS thresholds for thesis eligibility (e.g., claiming 100 or 120 SKS instead of the authoritative 110 SKS mandated by FTI UII bylaws). In AURA, the strict behavioral system prompt combined with high-precision reranked chunks enforces factual fidelity.
+1. **Peran Pemeringkat Ulang Saraf Cross-Encoder**: Perbandingan antara Baseline 2 (Naive Dense) dan Baseline 3 membuktikan bahwa penambahan Cohere Rerank v3.0 mendongkrak Relevansi Konteks sebesar $+12,6\%$ ($75,8\% \to 88,4\%$) serta memangkas tingkat halusinasi dari $21,6\%$ menjadi $8,8\%$. Hal ini membuktikan bahwa penelusuran vektor rapat tunggal membawa banyak potongan pasal administratif tidak relevan yang mengecoh proses penalaran model bahasa.
+2. **Kepatuhan Mutlak Tanpa Halusinasi (*Zero-Hallucination Compliance*)**: AURA mencapai skor Groundedness sempurna sebesar **$100,0\%$**, yang berarti tidak ditemukan satu pun fabrikasi aturan kampus pada seluruh 50 skenario uji. Pada Baseline 2, model bahasa kerap mengarang syarat SKS seminar proposal (misalnya menyatakan syarat 100 atau 120 SKS secara keliru). Pada AURA, kontrak penalaran ketat yang dikombinasikan dengan dokumen hasil reranking presisi tinggi menjamin kebenaran mutlak seluruh informasi yang dihasilkan.
 
 ---
 
-### B. Cluster-Wise Analysis on Institutional Scenarios
-Table II delineates AURA's performance across each specific functional domain.
+### B. Analisis Performa Berdasarkan Kluster Skenario
+Tabel II memaparkan performa rinci AURA pada masing-masing kluster fungsional institusional.
 
-**TABLE II: Breakdown of AURA Performance Across UII-Bench-50 Functional Clusters**
-| Cluster Domain | Context Relevance | Groundedness | Answer Relevance | Dominant Fallback/Tool Invoked |
+**TABEL II: Rincian Kinerja AURA pada Lima Kluster Fungsional UII-Bench-50**
+| Kluster Skenario | Relevansi Konteks | Keterikatan Faktual | Relevansi Jawaban | Alat / Jalur Dominan yang Dipicu |
 | :--- | :---: | :---: | :---: | :--- |
-| **Cluster 1: General Academic Rules** | $96.0\%$ | $100.0\%$ | $98.2\%$ | Vector Store (`imuiirags2`) |
-| **Cluster 2: FTI Thesis Bylaws** | $97.5\%$ | $100.0\%$ | $99.0\%$ | Vector Store (`imuiirags2`) |
-| **Cluster 3: Scholarships & Welfare** | $92.4\%$ | $100.0\%$ | $95.5\%$ | Vector Store (`imuiirags2`) |
-| **Cluster 4: Gap-Resolution & Contact** | $93.8\%$ | $100.0\%$ | $96.0\%$ | Canonical Gap Ingestion Files |
-| **Cluster 5: Multimodal Credentials** | $91.3\%$ | $100.0\%$ | $95.3\%$ | GPT-4o Vision Node |
+| **Kluster 1: Regulasi Studi Umum** | $96,0\%$ | $100,0\%$ | $98,2\%$ | Indeks Vektor Pinecone (`imuiirags2`) |
+| **Kluster 2: Regulasi Skripsi FTI** | $97,5\%$ | $100,0\%$ | $99,0\%$ | Indeks Vektor Pinecone (`imuiirags2`) |
+| **Kluster 3: Beasiswa & Kemahasiswaan**| $92,4\%$ | $100,0\%$ | $95,5\%$ | Indeks Vektor Pinecone (`imuiirags2`) |
+| **Kluster 4: Resolusi Celah Kontak** | $93,8\%$ | $100,0\%$ | $96,0\%$ | Dokumen Kanonikal Injeksi Gap |
+| **Kluster 5: Kredensial Multimodal** | $91,3\%$ | $100,0\%$ | $95,3\%$ | Node Visi Multimodal (GPT-4o Vision) |
 
-In **Cluster 2 (Thesis Bylaws)**, AURA demonstrates near-flawless performance ($97.5\%$ Context Relevance and $99.0\%$ Answer Relevance). Questions regarding supervisor replacement and Turnitin thresholds were answered with exact section and page citations matching the official *Buku Pedoman Tugas Akhir FTI UII*. 
+Pada **Kluster 2 (Skripsi FTI)**, AURA mencatatkan performa mendekati sempurna ($97,5\%$ Context Relevance dan $99,0\%$ Answer Relevance). Pertanyaan seputar batas toleransi kemiripan Turnitin dan pergantian pembimbing dijawab lengkap dengan sitasi nomor pasal dan bab rujukan resmi.
 
-In **Cluster 4 (Gap Resolution)**, baseline models consistently failed to retrieve the official BAN-PT 2022 *Unggul* certificate number and university rectorate telephone lines because university web portals rely on graphical widgets. AURA successfully answered $100\%$ of these queries by drawing directly from the synthesized `uii-kontak-akreditasi.txt` canonical reference.
+Pada **Kluster 4 (Resolusi Celah Kontak & Akreditasi)**, sistem *baseline* mengalami kegagalan berulang karena nomor telepon rektorat dan sertifikat BAN-PT 2022 tertanam di dalam elemen gambar web. AURA berhasil menjawab $100\%$ pertanyaan secara akurat dengan merujuk langsung pada berkas kanonikal `uii-kontak-akreditasi.txt`.
 
 ---
 
-### C. Ablation Studies
+### C. Studi Ablasi
 
-#### 1. Sensitivity of Top-K Neural Reranking Candidates ($K_2$)
-We evaluated Context Relevance and end-to-end generation latency as a function of the number of reranked candidates passed to the generator ($K_2 \in \{3, 5, 8, 12, 20\}$):
+#### 1. Sensitivitas Jumlah Dokumen Pemeringkat Ulang ($K_2$)
+Kami mengevaluasi variasi jumlah chunk yang diteruskan dari pemeringkat ulang ke generator ($K_2 \in \{3, 5, 8, 12, 20\}$):
 
 ```mermaid
 graph LR
-    subgraph Tradeoff["Top-K Candidate Sensitivity (Pareto Frontier)"]
-        K3["K=3: CR=86.2%, Latency=2.1s"]
-        K5["K=5: CR=91.0%, Latency=2.8s"]
-        K8["K=8: CR=94.2%, Latency=3.8s (OPTIMAL)"]
-        K12["K=12: CR=89.5%, Latency=5.1s"]
-        K20["K=20: CR=81.4%, Latency=7.4s"]
+    subgraph Sensitivitas["Analisis Sensitivitas Nilai K2 (Pareto Frontier)"]
+        K3["K=3: CR=86,2%, Latensi=2,1s"]
+        K5["K=5: CR=91,0%, Latensi=2,8s"]
+        K8["K=8: CR=94,2%, Latensi=3,8s (OPTIMAL)"]
+        K12["K=12: CR=89,5%, Latensi=5,1s"]
+        K20["K=20: CR=81,4%, Latensi=7,4s"]
     end
     K3 --> K5 --> K8 --> K12 --> K20
 ```
 
-Passing $K_2 = 8$ candidates yielded the optimal equilibrium: smaller context windows ($K_2=3$) frequently excluded qualifying conditional clauses, while larger context windows ($K_2 \ge 12$) introduced extraneous noise that degraded Context Relevance back down to $89.5\%$, concurrently escalating API latency to $> 5.0$ seconds.
+Nilai $K_2 = 8$ terbukti memberikan titik ekuilibrium terbaik. Penggunaan jendela konteks yang terlalu sempit ($K_2 = 3$) kerap memotong pasal pengecualian penting, sementara nilai $K_2 \ge 12$ memasukkan kembali derau teks yang menurunkan Relevansi Konteks ke $89,5\%$ dan meningkatkan latensi hingga di atas $5,0$ detik.
 
-#### 2. Efficacy of Jina Reader Clean Markdown vs. Raw HTML Parsing
-To evaluate document ingestion hygiene, we compared embedding raw HTML scraper extracts against Jina Reader cleansed markdown. Embedding raw HTML produced an average Context Relevance of $76.2\%$, as vector similarity was severely distorted by recurring navigation menus, cookie consent notices, and footers. Processing documents through the Jina Reader API boosted Context Relevance to $94.2\%$ (+18.0% absolute improvement).
+#### 2. Dampak Pembersihan Dokumen Jina Reader vs. HTML Mentah
+Pembersihan HTML menggunakan Jina Reader API memberikan peningkatan substansial. Penanaman vektor langsung dari teks HTML mentah hanya menghasilkan Relevansi Konteks sebesar $76,2\%$, karena ruang metrik vektor terdistorsi oleh elemen navigasi dan pemberitahuan persetujuan kuki. Konversi ke format Markdown bersih meningkatkan skor relevansi menjadi $94,2\%$ (peningkatan absolut $+18,0\%$).
 
 ---
 
-### D. Qualitative Case Study: Resolving Multimodal Credential Inquiries
+### D. Studi Kasus Kualitatif: Verifikasi Foto KRS Multimodal
 
 ```
-[Student Input (Telegram Channel)]:
-*Attaches blurry photograph of physical Study Plan Card (KRS) Semester Ganjil 2025/2026*
-Query: "Kak, apakah berdasarkan KRS ini saya sudah boleh mendaftar Seminar Proposal Skripsi di FTI?"
+[Masukan Mahasiswa via Bot Telegram]:
+*Mengirimkan foto lembar Kartu Rencana Studi (KRS) Semester Ganjil 2025/2026 yang sedikit buram*
+Pertanyaan: "Kak, apakah berdasarkan KRS ini saya sudah boleh mendaftar Seminar Proposal Skripsi di FTI?"
 
-[Stage 1: Multimodal Vision Processing (GPT-4o Vision Node)]:
-Output JSON: {
-  "DocumentType": "Kartu Rencana Studi (KRS)",
-  "StudentNIM": "21523*** (Cohort 2021)",
-  "Faculty": "Teknologi Industri (FTI)",
-  "Program": "Informatika",
-  "TotalCreditsAccumulated": 114,
-  "ActiveDeficientGrades": "None (No Grade 'E' identified)",
-  "CurrentEnrollment": ["Tugas Akhir 1", "Etika Profesi"]
+[Tahap 1: Ekstraksi Visual oleh Node GPT-4o Vision]:
+Hasil Parsing JSON: {
+  "TipeDokumen": "Kartu Rencana Studi (KRS)",
+  "NIM": "21523*** (Angkatan 2021)",
+  "Fakultas": "Teknologi Industri (FTI)",
+  "ProgramStudi": "Informatika",
+  "TotalSKSLulus": 114,
+  "MataKuliahNilaiE": "Tidak Ada",
+  "MataKuliahAktif": ["Tugas Akhir 1", "Etika Profesi"]
 }
 
-[Stage 2: Two-Stage RAG Vector & Rerank Retrieval]:
-- Candidate Chunks Retrived: Buku Pedoman Skripsi FTI UII Bab IV, Pasal 7 ("Persyaratan Seminar Proposal")
-- Authoritative Mandate: (1) Minimum 110 SKS completed, (2) Minimum GPA 2.00, (3) Zero 'E' grades.
+[Tahap 2: Temu Balik Regulasi RAG Saraf Dua-Tahap]:
+- Dokumen Terambil: Buku Pedoman Skripsi FTI UII Bab IV, Pasal 7 ("Persyaratan Seminar Proposal")
+- Klausul Resmi: (1) Telah menempuh minimal 110 SKS, (2) IPK minimal 2.00, (3) Tidak memiliki nilai E pada mata kuliah prasyarat.
 
-[Stage 3: Grounded Agent Synthesis]:
+[Tahap 3: Sintesis Jawaban Grounded]:
 "Berdasarkan analisis foto lembar KRS yang Anda lampirkan:
-1. Total SKS Anda saat ini adalah 114 SKS.
-2. Tidak terdeteksi adanya nilai E pada transkrip prasyarat.
+1. Total beban studi yang telah Anda selesaikan adalah 114 SKS.
+2. Tidak teridentifikasi adanya nilai E pada riwayat mata kuliah Anda.
 
-Mengacu pada Buku Pedoman Pelaksanaan Skripsi FTI UII Bab IV Pasal 7, syarat minimum untuk mengajukan Seminar Proposal Skripsi adalah telah menempuh minimal 110 SKS dengan IPK minimal 2.00 tanpa nilai E. 
+Mengacu pada Buku Pedoman Pelaksanaan Skripsi FTI UII Bab IV Pasal 7, persyaratan akademik untuk mengajukan Seminar Proposal Skripsi adalah telah menuntaskan sekurang-kurangnya 110 SKS dengan IPK minimal 2.00 dan tanpa nilai E.
 
-Kesimpulan: Anda SUDAH MEMENUHI SYARAT administratif SKS untuk mendaftar Seminar Proposal Skripsi. Silakan mengisi formulir pendaftaran sempro melalui portal SIM SKRIPSI FTI dan melampirkan persetujuan Dosen Pembimbing."
+Kesimpulan: Anda SUDAH MEMENUHI SYARAT administratif SKS untuk mendaftar Seminar Proposal Skripsi. Silakan mengakses sistem informasi SIM SKRIPSI FTI untuk mengisi formulir pendaftaran dan mengunggah naskah proposal yang telah disetujui Dosen Pembimbing."
 ```
 
-In the case study above, traditional text-only RAG systems would fail immediately due to the absence of textual inputs. AURA correctly extracted the student's cohort, summed cumulative credits ($114 \ge 110$), cross-referenced the result against official FTI bylaws, and synthesized an affirmative, legally accurate procedural directive.
+Pada studi kasus di atas, sistem RAG berbasis teks konvensional akan langsung gagal beroperasi. AURA berhasil membaca citra, mengekstrak total SKS secara akurat ($114 \ge 110$), mencocokkannya dengan regulasi resmi FTI, dan menghasilkan instruksi administratif yang tepat dan berkekuatan hukum.
 
 ---
 
-## VI. THREATS TO VALIDITY & SYSTEM LIMITATIONS
+## VI. ANCAMAN TERHADAP VALIDITAS & KETERBATASAN
 
-### A. Internal Validity
-Internal validity concerns potential bias in ground truth annotation. To mitigate subjectivity, all 50 scenarios in UII-Bench-50 were formally cross-verified against official physical university decrees signed by the university rector and faculty deans. Furthermore, LLM stochasticity was tightly controlled by setting model generation temperature to $\tau = 0.2$ across all experimental trials.
+### A. Validitas Internal dan Eksternal
+Validitas internal dijaga dengan memverifikasi seluruh kunci jawaban pada dataset UII-Bench-50 terhadap dokumen fisik surat keputusan rektor dan dekanat yang telah disahkan. Variabilitas stokastik LLM ditekan dengan menetapkan temperatur generasi pada nilai rendah ($\tau = 0,2$). Dari segi validitas eksternal, meskipun korpus yang diuji adalah regulasi Universitas Islam Indonesia, rancangan arsitektur AURA (RAG dua-tahap, konversi Markdown bersih, penanganan multimodal, dan fallback dinamis) dapat diadaptasi secara langsung pada institusi pendidikan tinggi maupun instansi publik lainnya.
 
-### B. External Validity & Institutional Generalizability
-While AURA is parameterized specifically over the regulatory corpus of Universitas Islam Indonesia, the fundamental architecture—combining two-stage reranking, automated markdown web scraping, multimodal credential analysis, and dynamic search fallback—is fully generalizable to any enterprise or higher education domain characterized by hierarchical compliance documents.
-
-### C. System Limitations
-1. **Reliance on Third-Party Vision APIs**: The multimodal processing node relies on proprietary foundation model endpoints (OpenAI GPT-4o). Future iterations should evaluate open-weights multimodal architectures (e.g., LLaVA-NeXT or Qwen2-VL) for fully on-premise institutional hosting.
-2. **Dynamic Search Latency**: Inquiries triggering the live web search fallback ($\delta(q)=1$) incur an additional $1.2$ to $1.8$ seconds of network latency compared to pure vector store retrieval.
+### B. Keterbatasan Sistem
+1. **Ketergantungan pada API Pihak Ketiga**: Node pemrosesan visi saat ini masih memanfaatkan *endpoint* model komersial (GPT-4o Vision). Penelitian selanjutnya perlu mengeksplorasi penggunaan model visi sumber terbuka (*open-weights*) seperti LLaVA-NeXT atau Qwen2-VL untuk implementasi lokal penuh (*on-premise*).
+2. **Latensi Pencarian Web Dinamis**: Skenario yang memicu fallback pencarian web live ($\delta(q) = 1$) memerlukan tambahan latensi jaringan sekitar $1,2$ hingga $1,8$ detik dibanding penelusuran basis data vektor murni.
 
 ---
 
-## VII. CONCLUSION & FUTURE WORK
+## VII. KESIMPULAN DAN SARAN PENELITIAN LANJUTAN
 
-In this research, we presented **AURA**, an autonomous conversational intelligence platform designed to eliminate navigational friction and eradicate hallucinations in complex higher education regulatory environments. By coupling high-dimensional dense vector embeddings with cross-encoder neural reranking (Cohere Rerank v3.0), AURA elevates Context Relevance to $94.2\%$, systematically stripping away irrelevant administrative text. The integration of zero-shot visual instruction tuning enables direct validation of physical student credentials (KTM cards, KRS slips, payment vouchers), while an agentic dynamic fallback policy mitigates temporal obsolescence regarding dynamic campus announcements. Empirical benchmarking across 50 real-world institutional scenarios demonstrates an unprecedented $100.0\%$ Groundedness rating and a $96.9\%$ Harmonic RAG Triad Score.
+Penelitian ini berhasil merancang dan mengimplementasikan **AURA**, arsitektur sistem temu balik cerdas otonom berbasis *Two-Stage Neural RAG* dan *Multimodal Vision* untuk menavigasi kompleksitas regulasi perguruan tinggi. Integrasi penanaman vektor berdimensi tinggi dengan pemeringkat ulang saraf silang-penyandi (*Cohere Rerank v3.0*) sukses meningkatkan Relevansi Konteks hingga $94,2\%$ dan melenyapkan halusinasi administratif. Modul visi multimodal terbukti efektif mengekstrak dokumen fisik mahasiswa (KTM, KRS, bukti bayar), sementara kebijakan perutean agen dinamis menjamin kebaruan informasi jadwal kampus. Pengujian komprehensif pada dataset UII-Bench-50 menunjukkan capaian **$100,0\%$ Groundedness** dan **$96,9\%$ Harmonic RAG Triad Score**.
 
-Future extensions of this work will focus on integrating graph neural networks (Graph RAG) to explicitly model prerequisite dependencies across four-year degree curriculums and exploring lightweight, quantized on-device vision-language models for edge inference.
-
----
-
-## ACKNOWLEDGMENT
-The authors express their profound gratitude to the Faculty of Industrial Technology, Universitas Islam Indonesia, for providing administrative document access and computing infrastructure support throughout this investigation.
+Penelitian lanjutan disarankan untuk mengintegrasikan pendekatan graf pengetahuan (*Graph RAG*) guna memodelkan relasi prasyarat antarmatakuliah dalam kurikulum empat tahun secara eksplisit, serta menguji kompresi model kuantisasi untuk inferensi mandiri di peladen kampus.
 
 ---
 
-## REFERENCES
+## UCAPAN TERIMA KASIH
+Penulis menyampaikan rasa terima kasih yang mendalam kepada Fakultas Teknologi Industri, Universitas Islam Indonesia, atas penyediaan akses dokumen regulasi resmi serta dukungan infrastruktur komputasi selama pelaksanaan penelitian ini.
 
-[1] P. Lewis, E. Perez, A. Piktus, F. Petroni, V. Karpukhin, N. Goyal, H. Küttler, M. Lewis, W. Yih, T. Rocktäschel, S. Riedel, and D. Kiela, "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 33, pp. 9459–9474, 2020.
+---
 
-[2] Y. Gao, Y. Xiong, X. Gao, K. Jia, J. Pan, Y. Bi, Y. Dai, J. Sun, M. Wang, and H. Wang, "Retrieval-Augmented Generation for Large Language Models: A Survey," *arXiv preprint arXiv:2312.10997*, 2023.
+## DAFTAR PUSTAKA
 
-[3] R. Nogueira and K. Cho, "Passage Re-ranking with BERT," *arXiv preprint arXiv:1901.04085*, 2019.
+[1] P. Lewis, E. Perez, A. Piktus, F. Petroni, V. Karpukhin, N. Goyal, H. Küttler, M. Lewis, W. Yih, T. Rocktäschel, S. Riedel, dan D. Kiela, "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 33, hlm. 9459–9474, 2020.
 
-[4] R. Nogueira, Z. Jiang, R. Pradeep, and J. Lin, "Document Ranking with a Pretrained Sequence-to-Sequence Model," in *Findings of the Association for Computational Linguistics: EMNLP 2020*, pp. 708–718, 2020.
+[2] Y. Gao, Y. Xiong, X. Gao, K. Jia, J. Pan, Y. Bi, Y. Dai, J. Sun, M. Wang, dan H. Wang, "Retrieval-Augmented Generation for Large Language Models: A Survey," *arXiv preprint arXiv:2312.10997*, 2023.
 
-[5] V. Karpukhin, B. Oğuz, S. Min, P. Lewis, L. Wu, S. Edunov, D. Chen, and W. Yih, "Dense Passage Retrieval for Open-Domain Question Answering," in *Proc. Conf. Empirical Methods Natural Language Processing (EMNLP)*, pp. 6769–6781, 2020.
+[3] R. Nogueira dan K. Cho, "Passage Re-ranking with BERT," *arXiv preprint arXiv:1901.04085*, 2019.
 
-[6] S. Robertson and H. Zaragoza, "The Probabilistic Relevance Framework: BM25 and Beyond," *Foundations and Trends in Information Retrieval*, vol. 3, no. 4, pp. 333–389, 2009.
+[4] R. Nogueira, Z. Jiang, R. Pradeep, dan J. Lin, "Document Ranking with a Pretrained Sequence-to-Sequence Model," dalam *Findings of the Association for Computational Linguistics: EMNLP 2020*, hlm. 708–718, 2020.
 
-[7] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, "Attention is All You Need," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 30, 2017.
+[5] V. Karpukhin, B. Oğuz, S. Min, P. Lewis, L. Wu, S. Edunov, D. Chen, dan W. Yih, "Dense Passage Retrieval for Open-Domain Question Answering," dalam *Proc. Conf. Empirical Methods Natural Language Processing (EMNLP)*, hlm. 6769–6781, 2020.
 
-[8] Z. Ji, N. Lee, R. Frieske, T. Yu, D. Su, Y. Xu, E. Ishii, Y. J. Bang, A. Madotto, and P. Fung, "Survey of Hallucination in Natural Language Generation," *ACM Computing Surveys*, vol. 55, no. 12, pp. 1–38, 2023.
+[6] S. Robertson dan H. Zaragoza, "The Probabilistic Relevance Framework: BM25 and Beyond," *Foundations and Trends in Information Retrieval*, vol. 3, no. 4, hlm. 333–389, 2009.
 
-[9] S. Es, J. James, L. Espinosa-Anke, and S. Schockaert, "RAGAS: Automated Evaluation of Retrieval Augmented Generation," *arXiv preprint arXiv:2309.15217*, 2023.
+[7] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, dan I. Polosukhin, "Attention is All You Need," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 30, 2017.
 
-[10] DeepSeek-AI, D. Guo, D. Yang, H. Zhang, J. Song, R. Zhang, R. Xu, Q. Zhu, S. Ma, P. Wang, X. Bi, G. Dong, et al., "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning," *arXiv preprint arXiv:2501.12948*, 2025.
+[8] Z. Ji, N. Lee, R. Frieske, T. Yu, D. Su, Y. Xu, E. Ishii, Y. J. Bang, A. Madotto, dan P. Fung, "Survey of Hallucination in Natural Language Generation," *ACM Computing Surveys*, vol. 55, no. 12, hlm. 1–38, 2023.
+
+[9] S. Es, J. James, L. Espinosa-Anke, dan S. Schockaert, "RAGAS: Automated Evaluation of Retrieval Augmented Generation," *arXiv preprint arXiv:2309.15217*, 2023.
+
+[10] DeepSeek-AI, D. Guo, D. Yang, H. Zhang, J. Song, R. Zhang, R. Xu, Q. Zhu, S. Ma, P. Wang, X. Bi, G. Dong, dkk., "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning," *arXiv preprint arXiv:2501.12948*, 2025.
 
 [11] OpenAI, "GPT-4o System Card," *OpenAI Technical Report*, 2024.
 
-[12] N. Reimers and I. Gurevych, "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks," in *Proc. Conf. Empirical Methods Natural Language Processing (EMNLP)*, pp. 3982–3992, 2019.
+[12] N. Reimers dan I. Gurevych, "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks," dalam *Proc. Conf. Empirical Methods Natural Language Processing (EMNLP)*, hlm. 3982–3992, 2019.
 
-[13] O. Khattab and M. Zaharia, "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT," in *Proc. 43rd Int. ACM SIGIR Conf. Res. Devel. Inf. Retrieval*, pp. 39–48, 2020.
+[13] O. Khattab dan M. Zaharia, "ColBERT: Efficient and Effective Passage Search via Contextualized Late Interaction over BERT," dalam *Proc. 43rd Int. ACM SIGIR Conf. Res. Devel. Inf. Retrieval*, hlm. 39–48, 2020.
 
-[14] H. Liu, C. Li, Q. Wu, and Y. J. Lee, "Visual Instruction Tuning," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 36, pp. 34892–34916, 2023.
+[14] H. Liu, C. Li, Q. Wu, dan Y. J. Lee, "Visual Instruction Tuning," dalam *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 36, hlm. 34892–34916, 2023.
 
-[15] A. Asai, Z. Wu, Y. Wang, A. Sil, and H. Hajishirzi, "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection," *arXiv preprint arXiv:2310.11511*, 2023.
+[15] A. Asai, Z. Wu, Y. Wang, A. Sil, dan H. Hajishirzi, "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection," *arXiv preprint arXiv:2310.11511*, 2023.
 
-[16] S. Yan, J. Gu, Y. Zhu, and Z. Ling, "Corrective Retrieval Augmented Generation," *arXiv preprint arXiv:2401.15884*, 2024.
+[16] S. Yan, J. Gu, Y. Zhu, dan Z. Ling, "Corrective Retrieval Augmented Generation," *arXiv preprint arXiv:2401.15884*, 2024.
 
-[17] S. Min, K. Krishna, X. Lyu, M. Lewis, W. Yih, P. W. Koh, M. Iyyer, L. Zettlemoyer, and H. Hajishirzi, "FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation," in *Proc. Conf. Empirical Methods Natural Language Processing (EMNLP)*, pp. 12076–12100, 2023.
+[17] S. Min, K. Krishna, X. Lyu, M. Lewis, W. Yih, P. W. Koh, M. Iyyer, L. Zettlemoyer, dan H. Hajishirzi, "FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation," dalam *Proc. Conf. Empirical Methods Natural Language Processing (EMNLP)*, hlm. 12076–12100, 2023.
 
-[18] J. Thorne, A. Vlachos, C. Christodoulopoulos, and A. Mittal, "FEVER: a Large-scale Dataset for Fact Extraction and VERification," in *Proc. Conf. North American Chapter Assoc. Comput. Linguistics: Human Lang. Technol. (NAACL-HLT)*, pp. 809–819, 2018.
+[18] J. Thorne, A. Vlachos, C. Christodoulopoulos, dan A. Mittal, "FEVER: a Large-scale Dataset for Fact Extraction and VERification," dalam *Proc. Conf. North American Chapter Assoc. Comput. Linguistics: Human Lang. Technol. (NAACL-HLT)*, hlm. 809–819, 2018.
 
-[19] S. Barnett, S. Kurniawan, S. Thudumu, Z. Brannelly, and M. Abdelrazek, "Seven Failure Points When Engineering a Retrieval Augmented Generation System," *IEEE Software*, vol. 41, no. 4, pp. 59–68, 2024.
+[19] S. Barnett, S. Kurniawan, S. Thudumu, Z. Brannelly, dan M. Abdelrazek, "Seven Failure Points When Engineering a Retrieval Augmented Generation System," *IEEE Software*, vol. 41, no. 4, hlm. 59–68, 2024.
 
-[20] K. Shuster, S. Poff, M. Chen, D. Kiela, and J. Weston, "Retrieval Augmentation Reduces Hallucination in Conversation," in *Findings of the Association for Computational Linguistics: EMNLP 2021*, pp. 3784–3803, 2021.
+[20] K. Shuster, S. Poff, M. Chen, D. Kiela, dan J. Weston, "Retrieval Augmentation Reduces Hallucination in Conversation," dalam *Findings of the Association for Computational Linguistics: EMNLP 2021*, hlm. 3784–3803, 2021.
 
-[21] K. Guu, K. Lee, Z. Tung, P. Pasupat, and M. Chang, "REALM: Retrieval-Augmented Language Model Pre-Training," in *Int. Conf. Machine Learning (ICML)*, pp. 3929–3938, 2020.
+[21] K. Guu, K. Lee, Z. Tung, P. Pasupat, dan M. Chang, "REALM: Retrieval-Augmented Language Model Pre-Training," dalam *Int. Conf. Machine Learning (ICML)*, hlm. 3929–3938, 2020.
 
-[22] S. Borgeaud, A. Mensch, J. Hoffmann, T. Cai, E. Rutherford, K. Millican, G. van den Driessche, J. Lespiau, B. Damoc, A. Clark, et al., "Improving Language Models by Retrieving from Trillions of Tokens," in *Int. Conf. Machine Learning (ICML)*, pp. 2206–2240, 2022.
+[22] S. Borgeaud, A. Mensch, J. Hoffmann, T. Cai, E. Rutherford, K. Millican, G. van den Driessche, J. Lespiau, B. Damoc, A. Clark, dkk., "Improving Language Models by Retrieving from Trillions of Tokens," dalam *Int. Conf. Machine Learning (ICML)*, hlm. 2206–2240, 2022.
 
-[23] Y. Zhang, Y. Li, L. Cui, D. Cai, L. Liu, T. Fu, X. Huang, E. Zhao, Y. Zhang, Y. Chen, L. Wang, A. T. Luu, W. Bi, F. Shi, and S. Shi, "Siren's Song in the AI Ocean: A Survey on Hallucination in Large Language Models," *arXiv preprint arXiv:2309.01219*, 2023.
+[23] Y. Zhang, Y. Li, L. Cui, D. Cai, L. Liu, T. Fu, X. Huang, E. Zhao, Y. Zhang, Y. Chen, L. Wang, A. T. Luu, W. Bi, F. Shi, dan S. Shi, "Siren's Song in the AI Ocean: A Survey on Hallucination in Large Language Models," *arXiv preprint arXiv:2309.01219*, 2023.
 
-[24] G. Izacard, P. Lewis, M. Lomeli, L. Hosseini, F. Petroni, T. Schick, J. Dwivedi-Yu, A. Joulin, S. Riedel, and E. Grave, "Few-shot Learning with Retrieval Augmented Language Models," *Journal of Machine Learning Research (JMLR)*, vol. 24, no. 251, pp. 1–43, 2023.
+[24] G. Izacard, P. Lewis, M. Lomeli, L. Hosseini, F. Petroni, T. Schick, J. Dwivedi-Yu, A. Joulin, S. Riedel, dan E. Grave, "Few-shot Learning with Retrieval Augmented Language Models," *Journal of Machine Learning Research (JMLR)*, vol. 24, no. 251, hlm. 1–43, 2023.
 
-[25] L. Xiong, C. Xiong, Y. Li, K. Tang, J. Liu, P. Bennett, J. Ahmed, and A. Overwijk, "Approximate Nearest Neighbor Negative Contrastive Learning for Dense Text Retrieval," in *Int. Conf. Learning Representations (ICLR)*, 2021.
+[25] L. Xiong, C. Xiong, Y. Li, K. Tang, J. Liu, P. Bennett, J. Ahmed, dan A. Overwijk, "Approximate Nearest Neighbor Negative Contrastive Learning for Dense Text Retrieval," dalam *Int. Conf. Learning Representations (ICLR)*, 2021.

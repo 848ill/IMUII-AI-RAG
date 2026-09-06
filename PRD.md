@@ -3,7 +3,7 @@
 
 * **Kode Dokumen:** PRD-AURA-UII-2026-V3
 * **Versi Dokumen:** 3.0.0 (Definitive Production & Thesis Defense Masterwork)
-* **Peneliti / Pengembang Utama:** Billy Hanif (NIM: Mahasiswa Teknik Informatika — Fakultas Teknologi Industri, Universitas Islam Indonesia)
+* **Peneliti / Pengembang Utama:** Muhammad Nabil Hanif (Mahasiswa Jurusan Teknik Informatika — Fakultas Teknologi Industri, Universitas Islam Indonesia)
 * **Bidang Fokus:** Artificial Intelligence, Natural Language Processing, Autonomous Multi-Agent Systems, Information Retrieval
 * **Target Pembaca:** AI Engineering Agents, Dewan Penguji & Pembimbing Skripsi, System Evaluators, Core Contributors
 * **Status Proyek:** Fully Functional / Production Ready & Thesis Evaluation Active
