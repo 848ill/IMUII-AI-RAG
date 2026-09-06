@@ -47,6 +47,8 @@ next-env.d.ts
 !README.md
 !PRD.md
 !TODO.md
+!PAPER_SCOPUS.md
+!paper/
 
 # n8n workflows (contains credentials)
 n8nessentials/
