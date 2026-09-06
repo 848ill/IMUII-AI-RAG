@@ -45,6 +45,7 @@ next-env.d.ts
 # Planning & documentation files
 *.md
 !README.md
+!PRD.md
 
 # n8n workflows (contains credentials)
 n8nessentials/
